@@ -1,3 +1,4 @@
+import importlib
 from pathlib import Path
 
 import torch
@@ -13,16 +14,25 @@ class SAM3(BaseGeoVLM):
         super().__init__(model_id)
         self.device = get_device(device)
         try:
-            from transformers import Sam3Model, Sam3Processor
-
-            self.processor = Sam3Processor.from_pretrained(model_id, trust_remote_code=True)
-            self.model = Sam3Model.from_pretrained(
-                model_id, dtype=get_dtype(self.device), device_map=self.device, trust_remote_code=True
+            transformers = importlib.import_module("transformers")
+            sam3_model_cls = getattr(transformers, "Sam3Model", None)
+            sam3_processor_cls = getattr(transformers, "Sam3Processor", None)
+            if sam3_model_cls is None or sam3_processor_cls is None:
+                raise AttributeError("Sam3 components unavailable")
+            self.processor = sam3_processor_cls.from_pretrained(model_id, trust_remote_code=True)
+            self.model = sam3_model_cls.from_pretrained(
+                model_id,
+                dtype=get_dtype(self.device),
+                device_map=self.device,
+                trust_remote_code=True,
             )
-        except (ImportError, OSError, ValueError):
+        except (AttributeError, ImportError, OSError, ValueError):
             self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
             self.model = AutoModel.from_pretrained(
-                model_id, dtype=get_dtype(self.device), device_map=self.device, trust_remote_code=True
+                model_id,
+                dtype=get_dtype(self.device),
+                device_map=self.device,
+                trust_remote_code=True,
             )
         self.model.eval()
 
@@ -32,12 +42,18 @@ class SAM3(BaseGeoVLM):
         return image.convert("RGB")
 
     def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512  # noqa: ARG002
+        self,
+        image: str | Path | Image.Image,
+        prompt: str,
+        max_new_tokens: int = 512,  # noqa: ARG002
     ) -> str:
         return self.generate(image, prompt, max_new_tokens=max_new_tokens)
 
     def generate(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512  # noqa: ARG002
+        self,
+        image: str | Path | Image.Image,
+        prompt: str,
+        max_new_tokens: int = 512,  # noqa: ARG002
     ) -> str:
         pil_image = self._load_image(image)
         inputs = self.processor(images=pil_image, text=prompt, return_tensors="pt").to(self.device)
@@ -51,8 +67,12 @@ class SAM3(BaseGeoVLM):
                 target_sizes=inputs.get("original_sizes").tolist(),
             )[0]
             num_objects = len(results["masks"])
-            avg_score = float(results["scores"].mean().item()) if len(results["scores"]) > 0 else 0.0
-            return f"Found {num_objects} object(s) matching '{prompt}' with average confidence score {avg_score:.3f}"
+            avg_score = (
+                float(results["scores"].mean().item()) if len(results["scores"]) > 0 else 0.0
+            )
+            return (
+                f"Found {num_objects} object(s) matching '{prompt}' with average confidence "
+                f"score {avg_score:.3f}"
+            )
         except (AttributeError, KeyError, TypeError):
             return f"Processed image with prompt '{prompt}' using SAM3 model"
-

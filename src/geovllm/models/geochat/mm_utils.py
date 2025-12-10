@@ -1,7 +1,6 @@
 import base64
 from io import BytesIO
 
-import numpy as np
 import torch
 from PIL import Image
 from transformers import StoppingCriteria
@@ -75,7 +74,7 @@ def tokenizer_image_token(
     prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split("<image>")]
 
     def insert_separator(X, sep):
-        return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+        return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
     input_ids = []
     offset = 0
@@ -121,7 +120,9 @@ class KeywordsStoppingCriteria(StoppingCriteria):
         self.tokenizer = tokenizer
         self.start_len = input_ids.shape[1]
 
-    def __call__(self, output_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs) -> bool:
+    def __call__(
+        self, output_ids: torch.LongTensor, _scores: torch.FloatTensor, **_: object
+    ) -> bool:
         # assert output_ids.shape[0] == 1, "Only support batch size 1 (yet)"  # TODO
         offset = min(output_ids.shape[1] - self.start_len, self.max_keyword_len)
         self.keyword_ids = [keyword_id.to(output_ids.device) for keyword_id in self.keyword_ids]

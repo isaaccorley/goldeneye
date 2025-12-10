@@ -1,11 +1,17 @@
 from collections.abc import Iterator
 
-from datasets import Dataset, load_dataset
+from datasets import (
+    Dataset,
+    DatasetDict,
+    IterableDataset,
+    IterableDatasetDict,
+    load_dataset,
+)
 
 
 def load_xlrs_bench(
     split: str = "train", streaming: bool = False, cache_dir: str | None = None
-) -> Dataset:
+) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the XLRS-Bench-lite dataset.
 
     Parameters

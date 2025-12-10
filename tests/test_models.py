@@ -22,4 +22,4 @@ def test_load_model_valid() -> None:
     model = geovllm.load_model("GeoR1", device="cpu")
     assert model is not None
     assert hasattr(model, "generate")
-    assert hasattr(model, "__call__")
+    assert callable(model)

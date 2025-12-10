@@ -11,8 +11,8 @@ def test_load_all_models():
     for model_name in models:
         print(f"Testing {model_name}...", end=" ", flush=True)
         try:
-            model = geovllm.load_model(model_name, device="cpu")
-            print(f"✓ Success")
+            geovllm.load_model(model_name, device="cpu")
+            print("✓ Success")
             results[model_name] = ("success", None)
         except Exception as e:
             print(f"✗ Failed: {e}")
@@ -36,4 +36,3 @@ def test_load_all_models():
 
 if __name__ == "__main__":
     test_load_all_models()
-

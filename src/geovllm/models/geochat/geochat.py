@@ -10,7 +10,7 @@ from geovllm.models.utils import get_device, get_dtype
 
 class GeoChat(BaseGeoVLM):
     def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id)
+        super().__init__(model_id, device=device)
         self.device = get_device(device)
         self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
         self.model = AutoModelForCausalLM.from_pretrained(
@@ -24,12 +24,12 @@ class GeoChat(BaseGeoVLM):
         return image.convert("RGB")
 
     def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         return self.generate(image, prompt, max_new_tokens=max_new_tokens)
 
     def generate(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         pil_image = self._load_image(image)
         messages = [{"role": "user", "content": f"<image>\n{prompt}"}]

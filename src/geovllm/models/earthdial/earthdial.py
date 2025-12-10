@@ -1,3 +1,5 @@
+import contextlib
+import sys
 from pathlib import Path
 
 import torch
@@ -8,9 +10,20 @@ from geovllm.models.base import BaseGeoVLM
 from geovllm.models.utils import get_device, get_dtype
 
 
+def _ensure_internvl_available() -> None:
+    if "internvl" not in sys.modules:
+        internvl_parent = Path(__file__).parent
+        internvl_parent_str = str(internvl_parent)
+        if internvl_parent_str not in sys.path:
+            sys.path.insert(0, internvl_parent_str)
+        with contextlib.suppress(ImportError):
+            pass
+
+
 class EarthDial(BaseGeoVLM):
     def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id)
+        super().__init__(model_id, device=device)
+        _ensure_internvl_available()
         self.device = get_device(device)
         base_model = "OpenGVLab/InternVL2-8B"
         try:
@@ -26,6 +39,12 @@ class EarthDial(BaseGeoVLM):
                 with open(config_path) as f:
                     model_config_dict = json.load(f)
                 model_config_dict["_name_or_path"] = base_model
+                if "auto_map" in model_config_dict:
+                    auto_map = model_config_dict["auto_map"]
+                    if "AutoModelForCausalLM" in auto_map:
+                        auto_map["AutoModelForCausalLM"] = (
+                            f"{base_model}--{auto_map['AutoModelForCausalLM'].split('--')[-1]}"
+                        )
                 model_config = AutoConfig.from_pretrained(base_model, trust_remote_code=True)
                 for key, value in model_config_dict.items():
                     if key not in ["_name_or_path", "auto_map", "transformers_version"]:
@@ -50,12 +69,12 @@ class EarthDial(BaseGeoVLM):
         return image.convert("RGB")
 
     def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         return self.generate(image, prompt, max_new_tokens=max_new_tokens)
 
     def generate(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         pil_image = self._load_image(image)
         messages = [{"role": "user", "content": f"<image>\n{prompt}"}]

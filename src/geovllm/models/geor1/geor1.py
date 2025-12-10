@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import torch
 from PIL import Image
@@ -19,10 +20,11 @@ class GeoR1(BaseGeoVLM):
         model_id: str,
         device: str | None = None,
     ) -> None:
-        super().__init__(model_id)
+        super().__init__(model_id, device=device)
         self.device = get_device(device)
         base_model_id = "miniHui/Geo-R1"
         try:
+            self.processor: Any
             try:
                 self.processor = Qwen2_5_VLProcessor.from_pretrained(
                     model_id, trust_remote_code=True
@@ -66,12 +68,12 @@ class GeoR1(BaseGeoVLM):
         return image.convert("RGB")
 
     def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         return self.generate(image, prompt, max_new_tokens=max_new_tokens)
 
     def generate(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 512
+        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
     ) -> str:
         pil_image = self._load_image(image)
         messages = [
@@ -86,8 +88,12 @@ class GeoR1(BaseGeoVLM):
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        image_inputs, video_inputs = self.processor.process_vision_info(messages)
-        inputs = self.processor(
+        process_vision = getattr(self.processor, "process_vision_info", None)
+        if process_vision is None:
+            msg = "processor missing process_vision_info"
+            raise AttributeError(msg)
+        image_inputs, video_inputs = process_vision(messages)
+        inputs: Any = self.processor(
             text=[text],
             images=image_inputs,
             videos=video_inputs,
