@@ -1,5 +1,5 @@
 from geovllm.models.base import BaseGeoVLM
-from geovllm.models.describeearth import DescribeEarth
+from geovllm.models.describe_earth import DescribeEarth
 from geovllm.models.earthdial import EarthDial
 from geovllm.models.earthgpt import EarthGPT
 from geovllm.models.geochat import GeoChat
@@ -13,8 +13,6 @@ from geovllm.models.zoomearth import ZoomEarth
 _MODEL_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
     "GeoLLaVA-8K": "initiacms/GeoLLaVA-8K",
-    "Geo-R1": "miniHui/Geo-R1",
-    "Geo-R1-7B-GRPO-REC-10shot": "Geo-R1/Geo-R1-7B-GRPO-REC-10shot",
     "Geo-R1-3B-GRPO-REC-5shot": "Geo-R1/Geo-R1-3B-GRPO-REC-5shot",
     "Geo-R1-3B-GRPO-GRES-5shot": "Geo-R1/Geo-R1-3B-GRPO-GRES-5shot",
     "Geo-R1-3B-GRPO-OVD-5shot": "Geo-R1/Geo-R1-3B-GRPO-OVD-5shot",
@@ -38,8 +36,6 @@ _MODEL_REGISTRY: dict[str, str] = {
 _MODEL_CLASSES: dict[str, type[BaseGeoVLM]] = {
     "GeoZero": GeoZero,
     "GeoLLaVA-8K": GeoLLaVA,
-    "Geo-R1": GeoR1,
-    "Geo-R1-7B-GRPO-REC-10shot": GeoR1,
     "Geo-R1-3B-GRPO-REC-5shot": GeoR1,
     "Geo-R1-3B-GRPO-GRES-5shot": GeoR1,
     "Geo-R1-3B-GRPO-OVD-5shot": GeoR1,

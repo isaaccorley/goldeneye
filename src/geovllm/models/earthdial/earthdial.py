@@ -12,17 +12,13 @@ class EarthDial(BaseGeoVLM):
     def __init__(self, model_id: str, device: str | None = None) -> None:
         super().__init__(model_id, device=device)
         self.device = get_device(device)
-        try:
-            self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-            self.model = AutoModelForCausalLM.from_pretrained(
-                model_id,
-                dtype=get_dtype(self.device),
-                device_map=self.device,
-                trust_remote_code=True,
-            )
-        except Exception as e:
-            msg = f"Failed to load EarthDial model {model_id}: {e}"
-            raise RuntimeError(msg) from e
+        self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+        self.model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            dtype=get_dtype(self.device),
+            device_map=self.device,
+            trust_remote_code=True,
+        )
         self.model.eval()
 
     def _load_image(self, image: str | Path | Image.Image) -> Image.Image:

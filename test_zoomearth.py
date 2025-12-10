@@ -1,7 +1,7 @@
 import os
-import torch
 from pathlib import Path
 
+import torch
 from PIL import Image
 
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
@@ -15,7 +15,7 @@ def main() -> None:
         print("CUDA is not available. Using CPU instead.")
         device = "cpu"
     else:
-        print(f"CUDA is available. Using device: cuda")
+        print("CUDA is available. Using device: cuda")
         device = "cuda"
         print(f"CUDA device: {torch.cuda.get_device_name(0)}")
 

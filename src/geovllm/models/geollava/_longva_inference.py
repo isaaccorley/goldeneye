@@ -8,7 +8,7 @@ import ast
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, List, Optional, Tuple, Union
+from typing import TYPE_CHECKING
 
 import torch
 import torch.nn as nn
@@ -55,7 +55,10 @@ def select_best_resolution(
     original_size: tuple[int, int], possible_resolutions: list[tuple[int, int]]
 ) -> tuple[int, int]:
     original_width, original_height = original_size
-    best_fit = None
+    if not possible_resolutions:
+        msg = "possible_resolutions cannot be empty"
+        raise ValueError(msg)
+    best_fit = possible_resolutions[0]
     max_effective_resolution = 0
     min_wasted_resolution = float("inf")
 
@@ -78,7 +81,7 @@ def select_best_resolution(
             min_wasted_resolution = wasted_resolution
             best_fit = (width, height)
 
-    return best_fit  # type: ignore[return-value]
+    return best_fit
 
 
 def resize_and_pad_image(image: Image.Image, target_resolution: tuple[int, int]) -> Image.Image:
@@ -969,21 +972,21 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
     def forward(
         self,
         input_ids: torch.LongTensor = None,
-        attention_mask: Optional[torch.Tensor] = None,
-        position_ids: Optional[torch.LongTensor] = None,
-        past_key_values: Optional[List[torch.FloatTensor]] = None,
-        inputs_embeds: Optional[torch.FloatTensor] = None,
-        labels: Optional[torch.LongTensor] = None,
-        use_cache: Optional[bool] = None,
-        output_attentions: Optional[bool] = None,
-        output_hidden_states: Optional[bool] = None,
-        images: Optional[torch.FloatTensor] = None,
-        image_sizes: Optional[List[List[int]]] = None,
-        return_dict: Optional[bool] = None,
-        modalities: Optional[List[str]] = ["image"],
-        dpo_forward: Optional[bool] = False,
-        cache_position: Optional[torch.Tensor] = None,
-    ) -> Union[Tuple, CausalLMOutputWithPast]:
+        attention_mask: torch.Tensor | None = None,
+        position_ids: torch.LongTensor | None = None,
+        past_key_values: list[torch.FloatTensor] | None = None,
+        inputs_embeds: torch.FloatTensor | None = None,
+        labels: torch.LongTensor | None = None,
+        use_cache: bool | None = None,
+        output_attentions: bool | None = None,
+        output_hidden_states: bool | None = None,
+        images: torch.FloatTensor | None = None,
+        image_sizes: list[list[int]] | None = None,
+        return_dict: bool | None = None,
+        modalities: list[str] | None = ["image"],
+        dpo_forward: bool | None = False,
+        cache_position: torch.Tensor | None = None,
+    ) -> tuple | CausalLMOutputWithPast:
         if inputs_embeds is None:
             (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = (
                 self.prepare_inputs_labels_for_multimodal(
@@ -1031,12 +1034,12 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
     @torch.no_grad()
     def generate(
         self,
-        inputs: Optional[torch.Tensor] = None,
-        images: Optional[torch.Tensor] = None,
-        image_sizes: Optional[torch.Tensor] = None,
-        modalities: Optional[List[str]] = ["image"],
+        inputs: torch.Tensor | None = None,
+        images: torch.Tensor | None = None,
+        image_sizes: torch.Tensor | None = None,
+        modalities: list[str] | None = ["image"],
         **kwargs: object,
-    ) -> Union[GenerateOutput, torch.LongTensor]:
+    ) -> GenerateOutput | torch.LongTensor:
         position_ids = kwargs.pop("position_ids", None)
         attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:

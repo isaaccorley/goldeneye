@@ -92,21 +92,23 @@ def main() -> None:
     print("\nStreaming LRS-GRO dataset (test split)...")
     print("Note: First run will download and extract images (this may take a while)...")
     sample_count = 0
-    max_samples_to_check = 10
+    max_samples_to_check = 100
 
     for sample in stream_lrs_gro(split="test", extract_images=True):
         sample_count += 1
-        print(f"\nProcessing sample {sample_count}...")
-        print(f"Question ID: {sample.get('question_id', 'N/A')}")
-        print(f"Image name: {sample.get('image_name', 'N/A')}")
+        if sample_count % 10 == 0:
+            print(f"Processed {sample_count} samples...")
 
         if "image" not in sample:
-            print(f"  Skipping: no image found (image_name: {sample.get('image_name')})")
             if sample_count >= max_samples_to_check:
-                print(f"\nChecked {max_samples_to_check} samples, no images found yet.")
-                print("Images may still be downloading/extracting. Please wait and try again.")
+                print(f"\nChecked {max_samples_to_check} samples, no images found.")
+                print("Some images may be missing from the dataset. Trying a different approach...")
                 break
             continue
+
+        print(f"\n✓ Found image in sample {sample_count}!")
+        print(f"Question ID: {sample.get('question_id', 'N/A')}")
+        print(f"Image name: {sample.get('image_name', 'N/A')}")
 
         image = sample["image"]
         question = sample.get("question", "Describe this image.")

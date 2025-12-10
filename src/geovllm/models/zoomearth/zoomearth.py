@@ -3,8 +3,6 @@ from pathlib import Path
 
 from PIL import Image
 from transformers import (
-    AutoModelForCausalLM,
-    AutoProcessor,
     Qwen2_5_VLForConditionalGeneration,
     Qwen2_5_VLProcessor,
 )
@@ -126,8 +124,8 @@ You are an intelligent remote sensing analyst. Given a natural language question
    - Your final answer, use a single word or phrase.
 
 Rules:
-- Always return exactly one <answer> block, for tasks that need cropping, you can provide the bounding box of the object you are intrested, after given the cropped image, you can generate another <think> block to find the answer.
-- For cropping tasks, also include a bounidng box in <stage_2_reasoning> block
+- Always return exactly one <answer> block, for tasks that need cropping, you can provide the bounding box of the object you are interested, after given the cropped image, you can generate another <think> block to find the answer.
+- For cropping tasks, also include a bounding box in <stage_2_reasoning> block
 - If unsure about localization, make a best guess—never say uncertain.
 <|im_end|><|im_start|>assistant
 """  # noqa: E501

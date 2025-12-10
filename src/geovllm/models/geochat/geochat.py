@@ -9,15 +9,10 @@ from geovllm.models.geochat.modeling_geochat import (
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_PATCH_TOKEN,
-    GeoChatConfig,
-    GeoChatLlamaForCausalLM,
     process_images,
     tokenizer_image_token,
 )
 from geovllm.models.utils import get_device, get_dtype
-
-_ = GeoChatConfig
-_ = GeoChatLlamaForCausalLM
 
 
 class GeoChat(BaseGeoVLM):

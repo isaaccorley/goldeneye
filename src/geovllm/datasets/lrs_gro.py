@@ -42,8 +42,6 @@ def _extract_tar_images(
     if images_dir.exists() and any(images_dir.iterdir()):
         return images_dir
     images_dir.mkdir(parents=True, exist_ok=True)
-    from huggingface_hub import hf_hub_url
-    import requests
 
     part_suffixes = [
         "aa",
@@ -80,9 +78,12 @@ def _extract_tar_images(
         if not combined_tar_path.exists() or combined_tar_path.stat().st_size == 0:
             if combined_tar_path.exists():
                 combined_tar_path.unlink()
+            print("Downloading and combining tar parts...")
+            total_parts = 0
             with open(combined_tar_path, "wb") as combined_tar:
                 for suffix in part_suffixes:
                     try:
+                        print(f"  Downloading part {suffix}...", end=" ", flush=True)
                         tar_path = hf_hub_download(
                             repo_id=repo_id,
                             filename=f"images.tar.part-{suffix}",
@@ -91,16 +92,28 @@ def _extract_tar_images(
                             force_download=False,
                             repo_type="dataset",
                         )
+                        part_size = Path(tar_path).stat().st_size
                         with open(tar_path, "rb") as part_file:
                             shutil.copyfileobj(part_file, combined_tar, length=8192)
-                    except Exception as e:
+                        total_parts += 1
+                        print(f"✓ ({part_size / 1024 / 1024:.1f} MB)")
+                    except Exception:
                         if suffix == "aa":
                             raise
-                        print(f"Stopped at part {suffix}: {e}")
+                        print("✗ (stopped)")
                         break
+            combined_size_mb = combined_tar_path.stat().st_size / 1024 / 1024
+            print(f"Combined {total_parts} parts into {combined_size_mb:.1f} MB")
         if combined_tar_path.exists() and combined_tar_path.stat().st_size > 0:
-            with tarfile.open(combined_tar_path, "r|") as tar:
-                tar.extractall(images_dir)
+            if not any(images_dir.iterdir()):
+                print("Extracting images from tar file...")
+                with tarfile.open(combined_tar_path, "r") as tar:
+                    tar.extractall(images_dir)
+                print(f"✓ Extracted images to {images_dir}")
+            else:
+                print(
+                    f"✓ Images already extracted ({len(list(images_dir.rglob('*.*')))} files found)"
+                )
         else:
             msg = "Failed to download tar parts or combined tar is empty"
             raise RuntimeError(msg)
@@ -133,7 +146,8 @@ def load_lrs_gro(
     Parameters
     ----------
     split : str | None, optional
-        Dataset split to load (e.g., "test", "sft", "rl"). If None, loads all splits, by default None
+        Dataset split to load (e.g., "test", "sft", "rl").
+        If None, loads all splits, by default None
     streaming : bool, optional
         If True, stream the dataset without downloading it entirely, by default False
     cache_dir : str | None, optional
@@ -199,7 +213,8 @@ def _add_images_to_dataset(
         Dataset with image paths added
     """
     if isinstance(dataset, DatasetDict):
-        return DatasetDict({k: _add_images_to_dataset(v, images_dir) for k, v in dataset.items()})
+        result_dict = {k: _add_images_to_dataset(v, images_dir) for k, v in dataset.items()}
+        return DatasetDict(result_dict)  # type: ignore[arg-type]
 
     def _load_image(example: dict[str, Any]) -> dict[str, Any]:
         image_name = example.get("image_name", "")
@@ -263,6 +278,7 @@ def stream_lrs_gro(
         repo_id=repo_id,
         filename=f"data/{split}-00000-of-00001.jsonl.jsonl",
         cache_dir=cache_dir,
+        repo_type="dataset",
     )
     with open(jsonl_file) as f:
         for line in f:
@@ -270,7 +286,9 @@ def stream_lrs_gro(
             if images_dir is not None:
                 image_name = sample.get("image_name", "")
                 if image_name:
-                    image_path = images_dir / image_name
+                    image_path = images_dir / "image" / image_name
+                    if not image_path.exists():
+                        image_path = images_dir / image_name
                     if image_path.exists():
                         sample["image"] = Image.open(image_path).convert("RGB")
             yield sample

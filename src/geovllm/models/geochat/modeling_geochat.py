@@ -1,7 +1,4 @@
-# Copyright 2023 Haotian Liu (LLaVA), MBZUAI (GeoChat)
-# Licensed under Apache License 2.0
-# Minimal inference-only code vendored from https://github.com/mbzuai-oryx/GeoChat
-
+# Vendored from https://github.com/mbzuai-oryx/GeoChat (Apache-2.0)
 from __future__ import annotations
 
 import math
@@ -279,7 +276,7 @@ class GeoChatMetaForCausalLM(ABC):
             return input_ids, attention_mask, past_key_values, None, labels
 
         if isinstance(images, list) or images.ndim == 5:
-            concat_images = torch.cat([image for image in images], dim=0)
+            concat_images = torch.cat(list(images), dim=0)
             image_features = self.encode_images(concat_images)
             split_sizes = [image.shape[0] for image in images]
             image_features = torch.split(image_features, split_sizes, dim=0)
@@ -446,7 +443,7 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
         output_hidden_states: bool | None = None,
         images: torch.FloatTensor | None = None,
         return_dict: bool | None = None,
-        **kwargs: Any,
+        **_: Any,
     ) -> CausalLMOutputWithPast:
         output_attentions = (
             output_attentions if output_attentions is not None else self.config.output_attentions
@@ -517,7 +514,7 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
                 "past_key_values": past_key_values,
                 "use_cache": kwargs.get("use_cache"),
                 "attention_mask": attention_mask,
-                "images": kwargs.get("images", None),
+                "images": kwargs.get("images"),
             }
         )
         return model_inputs

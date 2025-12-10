@@ -1,5 +1,5 @@
 from geovllm.models.base import BaseGeoVLM
-from geovllm.models.describeearth import DescribeEarth
+from geovllm.models.describe_earth import DescribeEarth
 from geovllm.models.earthdial import EarthDial
 from geovllm.models.earthgpt import EarthGPT
 from geovllm.models.geochat import GeoChat

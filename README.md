@@ -20,10 +20,7 @@ uv pip install geovllm
 ```python
 import geovllm
 
-# Load any supported model
-model = geovllm.load_model("GeoR1")
-
-# Use with an image and prompt
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
 response = model("path/to/image.jpg", "What is shown in this satellite image?")
 print(response)
 ```
@@ -32,12 +29,14 @@ print(response)
 
 - **GeoZero** (`hjvsl/GeoZero`)
 - **GeoLLaVA-8K** (`initiacms/GeoLLaVA-8K`) - Based on LongVA-7B
-- **Geo-R1** (`miniHui/Geo-R1`) - Qwen2.5-VL based reasoning model
+- **Geo-R1-3B** - Qwen2.5-VL-3B based geospatial reasoning models (8 variants: REC/GRES/OVD with 1/5/10-shot)
 - **EarthGPT** (`Pruz0/EarthGPT`) - GPT2-based geospatial model
+- **EarthDial-4B** - InternVL2-based models (RGB, MS, Methane-UHI variants)
 - **geochat-7B** (`MBZUAI/geochat-7B`) - Grounded Large Vision Language Model for Remote Sensing
 - **GeoPixel-7B** (`MBZUAI/GeoPixel-7B`) - Pixel grounding model for RS-GCG task
 - **GeoPixel-7B-RES** (`MBZUAI/GeoPixel-7B-RES`) - Pixel grounding model for RRSIS task
-- **SAM3** (`facebook/sam3`) - Segment Anything Model 3 for promptable concept segmentation
+- **ZoomEarth-3B** (`HappyBug/ZoomEarth-3B`) - Qwen2.5-VL based zoom-in reasoning model
+- **DescribeEarth** (`earth-insights/DescribeEarth`) - Remote sensing image captioning model
 
 ## Usage
 
@@ -47,17 +46,15 @@ print(response)
 import geovllm
 
 print(geovllm.list_models())
-# ['GeoZero', 'GeoLLaVA-8K', 'Geo-R1', 'EarthGPT', 'geochat-7B', 'GeoPixel-7B-RES', 'GeoPixel-7B']
 ```
 
-### Load and Use a Model
+### Basic Usage
 
 ```python
 import geovllm
 from PIL import Image
 
-# Load model (automatically uses GPU if available)
-model = geovllm.load_model("GeoR1")
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
 
 # Use with file path
 response = model("satellite_image.jpg", "Describe this image.")
@@ -66,78 +63,87 @@ response = model("satellite_image.jpg", "Describe this image.")
 image = Image.open("satellite_image.jpg")
 response = model(image, "What type of land use is shown here?")
 
-# Or use the generate method explicitly
-response = model.generate(image, "Analyze the urban development in this area.")
+# Control response length
+response = model(image, "Describe this image in detail.", max_new_tokens=256)
 ```
 
-### Specify Device
+### Device Selection
 
 ```python
 import geovllm
 
-# Force CPU usage
-model = geovllm.load_model("GeoR1", device="cpu")
+# Auto-detect (default)
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
 
-# Force CUDA (NVIDIA GPU)
-model = geovllm.load_model("GeoR1", device="cuda")
-
-# Force MPS (Apple Silicon GPU)
-model = geovllm.load_model("GeoR1", device="mps")
+# Force specific device
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
 ```
 
-**Note**: By default, models automatically detect and use the best available device:
+### Pixel Grounding with GeoPixel
 
-- CUDA (if NVIDIA GPU available)
-- MPS (if Apple Silicon Mac with macOS 12.3+)
-- CPU (fallback)
+GeoPixel models support pixel-level segmentation:
 
-### Testing with Benchmark Dataset
+```python
+import geovllm
+import numpy as np
+from PIL import Image
 
-Test your models on the [XLRS-Bench-lite](https://huggingface.co/datasets/initiacms/XLRS-Bench-lite) benchmark dataset. The dataset can be streamed sample-by-sample without downloading the entire dataset:
+model = geovllm.load_model("GeoPixel-7B")
+image = Image.open("satellite_image.jpg")
+
+# Get text response with segmentation masks
+response, masks = model.generate_with_masks(
+    image, "Segment all buildings in this image.", max_new_tokens=128
+)
+
+# Masks are numpy arrays (H, W) with values 0 or 1
+for i, mask in enumerate(masks):
+    mask_img = Image.fromarray((mask * 255).astype(np.uint8))
+    mask_img.save(f"mask_{i}.png")
+```
+
+### Benchmark Datasets
+
+#### XLRS-Bench-lite
 
 ```python
 import geovllm
 from geovllm.datasets import stream_xlrs_bench
 
-model = geovllm.load_model("GeoR1")
+model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
 
-# Stream dataset (no download required - samples fetched on-demand)
 for sample in stream_xlrs_bench(split="train"):
     image = sample["image"]
     question = sample.get("question", "Describe this image.")
-
     response = model(image, question)
-    print(f"Q: {question}")
-    print(f"A: {response}\n")
-
-    # Process just a few samples
-    break
+    print(f"Q: {question}\nA: {response}\n")
+    break  # Process just first sample
 ```
 
-You can also load the entire dataset (downloads to disk):
+#### DE-Dataset (DescribeEarth)
 
 ```python
-from geovllm.datasets import load_xlrs_bench
+import geovllm
+from geovllm.datasets import stream_de_dataset
 
-# Download entire dataset
-dataset = load_xlrs_bench(split="train", streaming=False)
-print(f"Dataset size: {len(dataset)}")
+model = geovllm.load_model("DescribeEarth")
 
-# Or stream without downloading
-dataset = load_xlrs_bench(split="train", streaming=True)
+for sample in stream_de_dataset(split="train"):
+    image = sample["image"]
+    key = sample.get("__key__", "")
+    response = model(image, "Describe what you see in this satellite image.")
+    print(f"Key: {key}\nResponse: {response}\n")
+    break  # Process just first sample
 ```
 
 ## Development
-
-We use [uv](https://docs.astral.sh/uv/), [ty](https://docs.astral.sh/ty/), and [pre-commit](https://pre-commit.com/) to make this project easy to use.
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
 uv sync --all-extras
 uv run pre-commit install
-
-# optionally run pre-commit hooks manually
-uv run pre-commit run --all-files
 ```
 
 ## Model Information

@@ -31,9 +31,16 @@ class GeoLLaVA(BaseGeoVLM):
         self._process_images = process_images
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+
+        from transformers import AutoConfig
+
+        config = AutoConfig.from_pretrained(model_id)
+        config.model_type = "llava_qwen"
+
         self.model = LlavaQwenForCausalLM.from_pretrained(
             model_id,
-            torch_dtype=get_dtype(self.device),
+            config=config,
+            dtype=get_dtype(self.device),
             device_map=self.device,
             low_cpu_mem_usage=True,
         )
