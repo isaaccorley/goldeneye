@@ -12,6 +12,7 @@ MODELS = [
     "GeoLLaVA-8K",
     "GeoPixel-7B",
     "Geo-R1",
+    "Geo-R1-3B-GRPO-REC-5shot",
 ]
 
 

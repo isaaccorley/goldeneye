@@ -4,17 +4,31 @@ from typing import Any
 import torch
 from PIL import Image
 from transformers import (
+    AutoProcessor,
     Qwen2_5_VLForConditionalGeneration,
     Qwen2_5_VLProcessor,
-    Qwen2VLForConditionalGeneration,
-    Qwen2VLProcessor,
 )
 
 from geovllm.models.base import BaseGeoVLM
 from geovllm.models.utils import get_device, get_dtype
 
+PROCESSOR_FALLBACKS: dict[str, str] = {
+    "Geo-R1/Geo-R1-3B-GRPO-REC-5shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-GRES-5shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-OVD-5shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-OVD-10shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-REC-1shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-GRES-1shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-GRES-10shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-3B-GRPO-REC-10shot": "Qwen/Qwen2.5-VL-3B-Instruct",
+    "Geo-R1/Geo-R1-7B-GRPO-REC-10shot": "Qwen/Qwen2.5-VL-7B-Instruct",
+}
+
 
 class GeoR1(BaseGeoVLM):
+    processor: Qwen2_5_VLProcessor
+    model: Qwen2_5_VLForConditionalGeneration
+
     def __init__(
         self,
         model_id: str,
@@ -22,44 +36,17 @@ class GeoR1(BaseGeoVLM):
     ) -> None:
         super().__init__(model_id, device=device)
         self.device = get_device(device)
-        base_model_id = "miniHui/Geo-R1"
+        processor_id = PROCESSOR_FALLBACKS.get(model_id, model_id)
         try:
-            self.processor: Any
-            try:
-                self.processor = Qwen2_5_VLProcessor.from_pretrained(
-                    model_id, trust_remote_code=True
-                )
-            except (OSError, ValueError):
-                self.processor = Qwen2VLProcessor.from_pretrained(
-                    base_model_id, trust_remote_code=True
-                )
-            try:
-                self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-                    model_id,
-                    dtype=get_dtype(self.device),
-                    device_map=self.device,
-                    trust_remote_code=True,
-                )
-            except (OSError, ValueError):
-                try:
-                    self.model = Qwen2VLForConditionalGeneration.from_pretrained(
-                        model_id,
-                        dtype=get_dtype(self.device),
-                        device_map=self.device,
-                        trust_remote_code=True,
-                    )
-                except (OSError, ValueError):
-                    from transformers import AutoModel
-
-                    self.model = AutoModel.from_pretrained(
-                        model_id,
-                        dtype=get_dtype(self.device),
-                        device_map=self.device,
-                        trust_remote_code=True,
-                    )
-        except Exception as e:
-            msg = f"Failed to load model {model_id}: {e}"
-            raise RuntimeError(msg) from e
+            self.processor = AutoProcessor.from_pretrained(processor_id, trust_remote_code=True)
+        except (OSError, ValueError):
+            self.processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+            model_id,
+            dtype=get_dtype(self.device),
+            device_map=self.device,
+            trust_remote_code=True,
+        )
         self.model.eval()
 
     def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
@@ -88,10 +75,11 @@ class GeoR1(BaseGeoVLM):
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        process_vision = getattr(self.processor, "process_vision_info", None)
+        process_vision: Any = getattr(self.processor, "process_vision_info", None)
         if process_vision is None:
-            msg = "processor missing process_vision_info"
-            raise AttributeError(msg)
+            from qwen_vl_utils import process_vision_info
+
+            process_vision = process_vision_info
         image_inputs, video_inputs = process_vision(messages)
         inputs: Any = self.processor(
             text=[text],
@@ -102,12 +90,14 @@ class GeoR1(BaseGeoVLM):
         )
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
         with torch.inference_mode():
-            generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
-        generated_ids_trimmed = [
-            out_ids[len(in_ids) :]
-            for in_ids, out_ids in zip(inputs["input_ids"], generated_ids, strict=True)
-        ]
+            generated_ids = self.model.generate(
+                **inputs, max_new_tokens=max_new_tokens, do_sample=False
+            )
+        input_len = inputs["input_ids"].shape[1]
+        generated_ids_trimmed = generated_ids[:, input_len:]
         output_text = self.processor.batch_decode(
-            generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
+            generated_ids_trimmed,
+            skip_special_tokens=True,
+            clean_up_tokenization_spaces=False,
         )
-        return output_text[0]
+        return output_text[0].strip()

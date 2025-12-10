@@ -1,4 +1,5 @@
 from geovllm.models.base import BaseGeoVLM
+from geovllm.models.describeearth import DescribeEarth
 from geovllm.models.earthdial import EarthDial
 from geovllm.models.earthgpt import EarthGPT
 from geovllm.models.geochat import GeoChat
@@ -7,6 +8,7 @@ from geovllm.models.geopixel import GeoPixel
 from geovllm.models.geor1 import GeoR1
 from geovllm.models.geozero import GeoZero
 from geovllm.models.sam3 import SAM3
+from geovllm.models.zoomearth import ZoomEarth
 
 _MODEL_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
@@ -29,6 +31,8 @@ _MODEL_REGISTRY: dict[str, str] = {
     "GeoPixel-7B-RES": "MBZUAI/GeoPixel-7B-RES",
     "GeoPixel-7B": "MBZUAI/GeoPixel-7B",
     "SAM3": "facebook/sam3",
+    "ZoomEarth-3B": "HappyBug/ZoomEarth-3B",
+    "DescribeEarth": "earth-insights/DescribeEarth",
 }
 
 _MODEL_CLASSES: dict[str, type[BaseGeoVLM]] = {
@@ -52,6 +56,8 @@ _MODEL_CLASSES: dict[str, type[BaseGeoVLM]] = {
     "GeoPixel-7B-RES": GeoPixel,
     "GeoPixel-7B": GeoPixel,
     "SAM3": SAM3,
+    "ZoomEarth-3B": ZoomEarth,
+    "DescribeEarth": DescribeEarth,
 }
 
 
