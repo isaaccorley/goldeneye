@@ -9,13 +9,13 @@ from typing import NamedTuple
 import torch
 from PIL import Image, ImageDraw, ImageFont
 
-import geovllm
-from geovllm.datasets import stream_de_dataset
+import goldeneye
+from goldeneye.datasets import stream_de_dataset
 
 os.environ["HF_HUB_ENABLE_HF_TRANSFER"] = "0"
 
 logging.basicConfig(level=logging.INFO, format="%(message)s")
-LOGGER = logging.getLogger("geovllm.run_all_models")
+LOGGER = logging.getLogger("goldeneye.run_all_models")
 
 
 class ModelResult(NamedTuple):
@@ -79,7 +79,7 @@ def run_model(
 ) -> ModelResult:
     LOGGER.info("Loading %s", model_name)
     try:
-        model = geovllm.load_model(model_name, device=device)
+        model = goldeneye.load_agent(model_name, device=device)
     except Exception as exc:  # noqa: BLE001
         return ModelResult(model_name, prompt, None, f"load_failed: {exc}")
     try:
@@ -100,7 +100,7 @@ def run_models(
 ) -> list[ModelResult]:
     return [
         run_model(model_name, image, prompt, device, max_new_tokens)
-        for model_name in geovllm.list_models()
+        for model_name in goldeneye.list_models()
     ]
 
 
@@ -160,7 +160,7 @@ def main() -> None:
     image = fetch_image(split="train")
     LOGGER.info("Fetched DE-Dataset sample: %s", image.size)
     results = run_models(image, prompt, device, max_new_tokens=64)
-    output_path = Path("/home/ubuntu/github/geovllm/all_models_describeearth.png")
+    output_path = Path("/home/ubuntu/github/goldeneye/all_models_describeearth.png")
     render_panel(image, prompt, results, output_path)
     successes = sum(1 for result in results if result.error is None)
     LOGGER.info("Completed %s/%s models. Output saved to %s", successes, len(results), output_path)

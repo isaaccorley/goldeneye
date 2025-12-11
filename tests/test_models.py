@@ -1,10 +1,10 @@
 import pytest
 
-import geovllm
+import goldeneye
 
 
 def test_list_models() -> None:
-    models = geovllm.list_models()
+    models = goldeneye.list_models()
     assert isinstance(models, list)
     assert len(models) > 0
     assert "GeoR1" in models
@@ -15,11 +15,11 @@ def test_list_models() -> None:
 
 def test_load_model_invalid() -> None:
     with pytest.raises(ValueError, match="Model.*not found"):
-        geovllm.load_model("InvalidModel")
+        goldeneye.load_agent("InvalidModel")
 
 
 def test_load_model_valid() -> None:
-    model = geovllm.load_model("GeoR1", device="cpu")
+    model = goldeneye.load_agent("GeoR1", device="cpu")
     assert model is not None
-    assert hasattr(model, "generate")
+    assert hasattr(model, "recon")
     assert callable(model)

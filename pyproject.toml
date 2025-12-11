@@ -3,7 +3,7 @@ build-backend = "uv_build"
 requires = ["uv-build>=0.9.3,<0.10"]
 
 [project]
-name = "geovllm"
+name = "goldeneye"
 version = "0.1.0"
 description = "Simple unified interface for geospatial vision-language models."
 readme = "README.md"

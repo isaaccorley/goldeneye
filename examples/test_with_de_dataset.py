@@ -4,13 +4,13 @@
 This example shows how to stream the DE-Dataset and test it with the DescribeEarth model.
 """
 
-import geovllm
-from geovllm.datasets import stream_de_dataset
+import goldeneye
+from goldeneye.datasets import stream_de_dataset
 
 
 def main() -> None:
     print("Loading DescribeEarth model...")
-    model = geovllm.load_model("DescribeEarth", device="cuda")
+    model = goldeneye.load_agent("DescribeEarth", device="cuda")
     print("Model loaded!\n")
 
     print("Streaming DE-Dataset samples...")

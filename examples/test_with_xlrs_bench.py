@@ -1,7 +1,7 @@
-import geovllm
-from geovllm.datasets import stream_xlrs_bench
+import goldeneye
+from goldeneye.datasets import stream_xlrs_bench
 
-model = geovllm.load_model("GeoR1", device="cpu")
+model = goldeneye.load_agent("GeoR1", device="cpu")
 
 print("Streaming XLRS-Bench-lite dataset (no download required)...")
 for i, sample in enumerate(stream_xlrs_bench(split="train")):

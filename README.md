@@ -1,26 +1,26 @@
-# geovllm
+# goldeneye
 
 Simple unified interface for geospatial vision-language models. Test any supported geospatial VLM with just one line of code.
 
 ## Installation
 
 ```bash
-pip install geovllm
+pip install goldeneye
 ```
 
 Or using `uv`:
 
 ```bash
 curl -LsSf https://astral.sh/uv/install.sh | sh
-uv pip install geovllm
+uv pip install goldeneye
 ```
 
 ## Quick Start
 
 ```python
-import geovllm
+import goldeneye
 
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
 response = model("path/to/image.jpg", "What is shown in this satellite image?")
 print(response)
 ```
@@ -42,18 +42,18 @@ print(response)
 ### List Available Models
 
 ```python
-import geovllm
+import goldeneye
 
-print(geovllm.list_models())
+print(goldeneye.list_models())
 ```
 
 ### Basic Usage
 
 ```python
-import geovllm
+import goldeneye
 from PIL import Image
 
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 # Use with file path
 response = model("satellite_image.jpg", "Describe this image.")
@@ -69,15 +69,15 @@ response = model(image, "Describe this image in detail.", max_new_tokens=256)
 ### Device Selection
 
 ```python
-import geovllm
+import goldeneye
 
 # Auto-detect (default)
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 # Force specific device
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
 ```
 
 ### Pixel Grounding with GeoPixel
@@ -85,11 +85,11 @@ model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
 GeoPixel models support pixel-level segmentation:
 
 ```python
-import geovllm
+import goldeneye
 import numpy as np
 from PIL import Image
 
-model = geovllm.load_model("GeoPixel-7B")
+model = goldeneye.load_agent("GeoPixel-7B")
 image = Image.open("satellite_image.jpg")
 
 # Get text response with segmentation masks
@@ -108,10 +108,10 @@ for i, mask in enumerate(masks):
 #### XLRS-Bench-lite
 
 ```python
-import geovllm
-from geovllm.datasets import stream_xlrs_bench
+import goldeneye
+from goldeneye.datasets import stream_xlrs_bench
 
-model = geovllm.load_model("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 for sample in stream_xlrs_bench(split="train"):
     image = sample["image"]
@@ -124,10 +124,10 @@ for sample in stream_xlrs_bench(split="train"):
 #### DE-Dataset (DescribeEarth)
 
 ```python
-import geovllm
-from geovllm.datasets import stream_de_dataset
+import goldeneye
+from goldeneye.datasets import stream_de_dataset
 
-model = geovllm.load_model("DescribeEarth")
+model = goldeneye.load_agent("DescribeEarth")
 
 for sample in stream_de_dataset(split="train"):
     image = sample["image"]
