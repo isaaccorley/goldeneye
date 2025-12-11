@@ -3,13 +3,14 @@ from typing import Any
 
 import torch
 from PIL import Image
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.geochat.modeling_geochat import (
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
     DEFAULT_IMAGE_PATCH_TOKEN,
+    GeoChatLlamaForCausalLM,
     process_images,
     tokenizer_image_token,
 )
@@ -27,10 +28,22 @@ class GeoChat(BaseAgent):
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
         self.tokenizer = AutoTokenizer.from_pretrained(codename, use_fast=False)
-        self.model = AutoModelForCausalLM.from_pretrained(
+        config = AutoConfig.from_pretrained(codename)
+        config.architectures = ["GeoChatLlamaForCausalLM"]
+        config._name_or_path = codename
+        if not hasattr(config, "auto_map") or config.auto_map is None:
+            config.auto_map = {}
+        config.auto_map.update(
+            {
+                "AutoModelForCausalLM": (
+                    "goldeneye.models.geochat.modeling_geochat.GeoChatLlamaForCausalLM"
+                ),
+            }
+        )
+        self.model = GeoChatLlamaForCausalLM.from_pretrained(
             codename,
+            config=config,
             dtype=self.dtype,
-            low_cpu_mem_usage=True,
             device_map=self.device,
         )
         self._setup_tokenizer()

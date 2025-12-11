@@ -14,7 +14,7 @@ import torch.nn.functional as F
 from PIL import Image
 from sam2.build_sam import build_sam2_hf
 from sam2.utils.transforms import SAM2Transforms
-from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
+from transformers import AutoConfig, AutoTokenizer, TextStreamer
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
 from goldeneye.models.base import BaseAgent
@@ -97,7 +97,7 @@ class GeoPixelMetaModel:
 
     def initialize_geopixel_modules(self, config):
         # grounding vision model
-        self.visual_model = build_sam2_hf(self.vision_pretrained)
+        self.visual_model = build_sam2_hf(self.vision_pretrained, device=None)
 
         self._transform = SAM2Transforms(
             resolution=self.visual_model.image_size,
@@ -487,13 +487,41 @@ class GeoPixel(BaseAgent):
             "eop_token_idx": self.tokenizer("</p>", add_special_tokens=False).input_ids[0],
             "dtype": self.dtype,
         }
-        self.model = AutoModelForCausalLM.from_pretrained(
+        config = AutoConfig.from_pretrained(codename, trust_remote_code=True)
+        config.architectures = ["GeoPixelForCausalLM"]
+        config._name_or_path = codename
+        config.auto_map = {
+            "AutoConfig": (
+                "goldeneye.models.geopixel.IXC.configuration_internlm_xcomposer2."
+                "InternLMXcomposer2Config"
+            ),
+            "AutoModel": (
+                "goldeneye.models.geopixel.IXC.modeling_internlm_xcomposer2."
+                "InternLMXComposer2ForCausalLM"
+            ),
+            "AutoModelForCausalLM": "goldeneye.models.geopixel.geopixel.GeoPixelForCausalLM",
+        }
+        self.model = GeoPixelForCausalLM.from_pretrained(
             codename,
+            config=config,
             low_cpu_mem_usage=True,
             device_map=self.device,
             trust_remote_code=True,
             **model_kwargs,
         )
+        device_type = (
+            (self.device or "cpu").split(":")[0] if isinstance(self.device, str) else "cpu"
+        )
+        if hasattr(self.model, "model") and hasattr(self.model.model, "visual_model"):
+            if device_type == "cuda" and torch.cuda.is_available():
+                target_device = self.device if isinstance(self.device, str) else "cuda"
+                self.model.model.visual_model = self.model.model.visual_model.to(target_device)
+            elif (
+                device_type == "mps"
+                and hasattr(torch.backends, "mps")
+                and torch.backends.mps.is_available()
+            ):
+                self.model.model.visual_model = self.model.model.visual_model.to("mps")
         self.model.config.eos_token_id = self.tokenizer.eos_token_id
         self.model.config.bos_token_id = self.tokenizer.bos_token_id
         self.model.config.pad_token_id = self.tokenizer.pad_token_id

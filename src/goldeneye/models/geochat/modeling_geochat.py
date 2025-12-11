@@ -114,6 +114,8 @@ class CLIPVisionTower(nn.Module):
             self.cfg_only = CLIPVisionConfig.from_pretrained(self.vision_tower_name)
 
     def load_model(self) -> None:
+        if self.is_loaded and self.vision_tower is not None:
+            return
         self.image_processor = CLIPImageProcessor.from_pretrained(self.vision_tower_name)
         self.vision_tower = CLIPVisionModel.from_pretrained(self.vision_tower_name)
         self.vision_tower.requires_grad_(False)
@@ -197,6 +199,27 @@ class CLIPVisionTower(nn.Module):
     @property
     def hidden_size(self) -> int:
         return self.config.hidden_size
+
+    def load_state_dict(
+        self, state_dict: dict[str, torch.Tensor], strict: bool = True, assign: bool = False
+    ) -> Any:
+        if not self.is_loaded:
+            self.load_model()
+        vision_tower_prefix = "vision_tower."
+        vision_tower_keys = [k for k in state_dict if k.startswith(vision_tower_prefix)]
+        if vision_tower_keys:
+            vision_tower_state_dict = {
+                k[len(vision_tower_prefix) :]: v
+                for k, v in state_dict.items()
+                if k in vision_tower_keys
+            }
+            for k in vision_tower_keys:
+                state_dict.pop(k)
+            if self.vision_tower is not None:
+                self.vision_tower.load_state_dict(
+                    vision_tower_state_dict, strict=strict, assign=assign
+                )
+        return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
 
 def build_vision_tower(vision_tower_cfg: Any, **kwargs: Any) -> CLIPVisionTower:

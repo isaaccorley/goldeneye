@@ -143,7 +143,9 @@ class ZoomEarth(BaseAgent):
         super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
-        self.processor = Qwen2_5_VLProcessor.from_pretrained(codename, trust_remote_code=True)
+        self.processor = Qwen2_5_VLProcessor.from_pretrained(
+            codename, trust_remote_code=True, use_fast=False
+        )
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
             codename,
             dtype=self.dtype,
