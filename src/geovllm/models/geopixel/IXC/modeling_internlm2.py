@@ -1,3 +1,5 @@
+# type: ignore
+# pyright: reportGeneralTypeIssues=false
 # Copyright (c) The InternLM team and The HuggingFace Inc. team. All rights reserved.
 #
 # This code is based on transformers/src/transformers/models/llama/modeling_llama.py
@@ -400,7 +402,7 @@ class InternLM2Attention(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`", stacklevel=2
             )
 
         bsz, q_len, _ = hidden_states.size()
@@ -505,7 +507,7 @@ class InternLM2FlashAttention2(InternLM2Attention):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`", stacklevel=2
             )
 
             # overwrite attention_mask with padding_mask
@@ -723,7 +725,7 @@ class InternLM2DecoderLayer(nn.Module):
         if "padding_mask" in kwargs:
             warnings.warn(
                 "Passing `padding_mask` is deprecated and will be removed in v4.37. "
-                "Please make sure use `attention_mask` instead.`"
+                "Please make sure use `attention_mask` instead.`", stacklevel=2
             )
 
         residual = hidden_states

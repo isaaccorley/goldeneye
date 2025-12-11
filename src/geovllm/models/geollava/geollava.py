@@ -5,16 +5,22 @@ from typing import Final
 
 import torch
 from PIL import Image
-from transformers import AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer
 
+import geovllm.models.geollava._longva_inference  # noqa: F401
 from geovllm.models.base import BaseGeoVLM
+from geovllm.models.geollava._longva_inference import (
+    IMAGE_TOKEN_INDEX,
+    LlavaQwenForCausalLM,
+    process_images,
+)
 from geovllm.models.utils import get_device, get_dtype
 
 _GEOLLAVA_DIR: Final[Path] = Path(__file__).parent
 
 
 def _ensure_longva_registered() -> None:
-    import geovllm.models.geollava._longva_inference  # noqa: F401
+    pass
 
 
 class GeoLLaVA(BaseGeoVLM):
@@ -23,16 +29,9 @@ class GeoLLaVA(BaseGeoVLM):
         self.device = get_device(device)
         _ensure_longva_registered()
 
-        from geovllm.models.geollava._longva_inference import (
-            LlavaQwenForCausalLM,
-            process_images,
-        )
-
         self._process_images = process_images
 
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
-
-        from transformers import AutoConfig
 
         config = AutoConfig.from_pretrained(model_id)
         config.model_type = "llava_qwen"
@@ -57,12 +56,10 @@ class GeoLLaVA(BaseGeoVLM):
         return self.generate(image, prompt, max_new_tokens=max_new_tokens)
 
     def _tokenize_with_image_token(self, text: str) -> torch.Tensor:
-        from geovllm.models.geollava._longva_inference import IMAGE_TOKEN_INDEX
-
         prompt_chunks = [self.tokenizer(chunk).input_ids for chunk in text.split("<image>")]
 
         def insert_separator(X: list, sep: list) -> list:
-            return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+            return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
         input_ids: list[int] = []
         offset = 0

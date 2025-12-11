@@ -1,3 +1,5 @@
+# type: ignore
+# pyright: reportGeneralTypeIssues=false
 # Copyright (c) The InternLM team and The HuggingFace Inc. team. All rights reserved.
 #
 # This code is based on transformers/src/transformers/models/llama/tokenization_llama.py

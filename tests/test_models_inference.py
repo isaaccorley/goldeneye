@@ -6,7 +6,6 @@ import pytest
 import geovllm
 
 MODELS = [
-    "EarthGPT",
     "EarthDial-4B-RGB",
     "geochat-7B",
     "GeoLLaVA-8K",

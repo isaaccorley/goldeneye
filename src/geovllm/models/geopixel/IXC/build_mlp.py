@@ -15,7 +15,7 @@ def build_vision_projector():
     projector_type = "mlp2x_gelu"
     mm_hidden_size = 4096
     mid_hidden_size = 4096
-    hidden_size = 4096
+    hidden_size = 4096  # noqa: F841
 
     mlp_gelu_match = re.match(r"^mlp(\d+)x_gelu$", projector_type)
     if mlp_gelu_match:
@@ -37,7 +37,7 @@ class IdentityMap(nn.Module):
     def __init__(self):
         super().__init__()
 
-    def forward(self, x, *args, **kwargs):
+    def forward(self, x, *args, **kwargs):  # noqa: ARG002
         return x
 
     @property
@@ -193,7 +193,7 @@ class PLoRA(nn.Linear):
         lora_alpha=16,
         lora_dropout=0.05,
         lora_len=0,
-        **kwargs,
+        **kwargs,  # noqa: ARG002
     ) -> None:
         super().__init__(in_features, out_features, bias, device, dtype)
         self.lora_r = lora_r
@@ -224,7 +224,6 @@ class PLoRA(nn.Linear):
             # initialize A the same way as the default for nn.Linear and B to zero
             nn.init.kaiming_uniform_(self.lora_A.weight, a=math.sqrt(5))
             nn.init.zeros_(self.lora_B.weight)
-            # print ("lora weight init {} {}".format(torch.mean(self.lora_A.weight), torch.mean(self.lora_B.weight)))
 
     def forward(self, x, im_mask=None, infer_mode="base"):
         B, N, C = x.shape

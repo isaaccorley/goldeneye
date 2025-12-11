@@ -60,7 +60,7 @@ def Image_transform(img, hd_num=25):
     return img
 
 
-def Video_transform(img, hd_num=25):
+def Video_transform(img, hd_num=25):  # noqa: ARG001
     width, height = img.size
     trans = False
     if width < height:

@@ -1,4 +1,6 @@
 # GeoLLaVA-8K / LongVA inference module
+# pyright: reportGeneralTypeIssues=false
+# type: ignore
 # Vendored from https://github.com/MiliLab/GeoLLaVA-8K
 # Original code: Apache License 2.0 (Copyright 2023 Haotian Liu, 2024 Hao Zhang)
 # This file consolidates all inference-related code into a single module.
@@ -6,11 +8,13 @@ from __future__ import annotations
 
 import ast
 import math
+import os
 import re
 from abc import ABC, abstractmethod
 from typing import TYPE_CHECKING
 
 import torch
+import torch.distributed as dist
 import torch.nn as nn
 import torch.nn.functional as F
 from PIL import Image
@@ -40,8 +44,6 @@ DEFAULT_IM_END_TOKEN = "<im_end>"
 
 def rank0_print(*args: object) -> None:
     try:
-        import torch.distributed as dist
-
         if dist.is_initialized():
             if dist.get_rank() == 0:
                 print(f"Rank {dist.get_rank()}: ", *args)
@@ -229,7 +231,7 @@ def tokenizer_image_token(
     prompt_chunks = [tokenizer(chunk).input_ids for chunk in prompt.split("<image>")]
 
     def insert_separator(X: list, sep: list) -> list:
-        return [ele for sublist in zip(X, [sep] * len(X)) for ele in sublist][:-1]
+        return [ele for sublist in zip(X, [sep] * len(X), strict=False) for ele in sublist][:-1]
 
     input_ids = []
     offset = 0
@@ -252,7 +254,7 @@ def tokenizer_image_token(
 
 
 class RegProxyAffinityHead(nn.Module):
-    def __init__(self, in_dim: int = 1024, std_init: float = 0.01) -> None:
+    def __init__(self, in_dim: int = 1024, std_init: float = 0.01) -> None:  # noqa: ARG002
         super().__init__()
         self.dw = nn.Conv2d(in_dim, in_dim, 3, 1, 1, groups=in_dim, bias=False)
         self.pw = nn.Conv2d(in_dim, 9, 1, bias=True)
@@ -371,7 +373,12 @@ class IdentityMap(nn.Module):
     def __init__(self) -> None:
         super().__init__()
 
-    def forward(self, x: torch.Tensor, *args: object, **kwargs: object) -> torch.Tensor:
+    def forward(
+        self,
+        x: torch.Tensor,
+        *args: object,  # noqa: ARG002
+        **kwargs: object,  # noqa: ARG002
+    ) -> torch.Tensor:
         return x
 
     @property
@@ -392,7 +399,11 @@ class SimpleResBlock(nn.Module):
         return x + self.proj(x)
 
 
-def build_vision_projector(config: object, delay_load: bool = False, **kwargs: object) -> nn.Module:
+def build_vision_projector(
+    config: object,
+    delay_load: bool = False,  # noqa: ARG001
+    **kwargs: object,  # noqa: ARG001
+) -> nn.Module:
     projector_type = getattr(config, "mm_projector_type", "linear")
 
     if projector_type == "linear":
@@ -426,7 +437,9 @@ def build_vision_projector(config: object, delay_load: bool = False, **kwargs: o
 
 
 def build_vision_resampler(
-    model_args: object, delay_load: bool = False, **kwargs: object
+    model_args: object,
+    delay_load: bool = False,  # noqa: ARG001
+    **kwargs: object,  # noqa: ARG001
 ) -> nn.Module:
     resampler_type = getattr(model_args, "mm_resampler_type", None)
     if resampler_type is None:
@@ -447,12 +460,14 @@ class CLIPVisionTower(nn.Module):
             self.load_model()
         elif getattr(args, "unfreeze_mm_vision_tower", False):
             rank0_print(
-                "The checkpoint seems to contain `vision_tower` weights: `unfreeze_mm_vision_tower`: True."
+                "The checkpoint seems to contain `vision_tower` weights: "
+                "`unfreeze_mm_vision_tower`: True."
             )
             self.load_model()
         elif hasattr(args, "mm_tunable_parts") and "mm_vision_tower" in args.mm_tunable_parts:
             rank0_print(
-                "The checkpoint seems to contain `vision_tower` weights: `mm_tunable_parts` contains `mm_vision_tower`."
+                "The checkpoint seems to contain `vision_tower` weights: "
+                "`mm_tunable_parts` contains `mm_vision_tower`."
             )
             self.load_model()
         else:
@@ -585,8 +600,6 @@ class CLIPVisionTower(nn.Module):
 
 
 def build_vision_tower(vision_tower_cfg: object, **kwargs: object) -> CLIPVisionTower:
-    import os
-
     vision_tower = getattr(
         vision_tower_cfg, "mm_vision_tower", getattr(vision_tower_cfg, "vision_tower", None)
     )
@@ -603,7 +616,7 @@ def build_vision_tower(vision_tower_cfg: object, **kwargs: object) -> CLIPVision
 
 class LlavaMetaModel:
     def __init__(self, config: object) -> None:
-        super(LlavaMetaModel, self).__init__(config)  # type: ignore[call-arg]
+        super().__init__(config)  # type: ignore[call-arg]
 
         if hasattr(config, "mm_vision_tower"):
             delay_load = getattr(config, "delay_load", False)
@@ -687,9 +700,11 @@ class LlavaMetaForCausalLM(ABC):
         past_key_values: object,
         labels: torch.Tensor | None,
         images: torch.Tensor | list[torch.Tensor] | None,
-        modalities: list[str] = ["image"],
-        image_sizes: list[list[int]] | None = None,
+        modalities: list[str] | None = None,
+        image_sizes: list[list[int]] | None = None,  # noqa: ARG002
     ) -> tuple:
+        if modalities is None:
+            modalities = ["image"]
         vision_tower = self.get_vision_tower()
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
@@ -712,7 +727,7 @@ class LlavaMetaForCausalLM(ABC):
                 else:
                     images_list.append(image.unsqueeze(0))
 
-            concat_images = torch.cat([image for image in images_list], dim=0)
+            concat_images = torch.cat(list(images_list), dim=0)
             split_sizes = [image.shape[0] for image in images_list]
             mm_patch_merge_type = getattr(self.config, "mm_patch_merge_type", "flat")
 
@@ -793,11 +808,11 @@ class LlavaMetaForCausalLM(ABC):
         _input_ids = input_ids
         input_ids = [
             cur_input_ids[cur_attention_mask]
-            for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask)
+            for cur_input_ids, cur_attention_mask in zip(input_ids, attention_mask, strict=False)
         ]
         labels = [
             cur_labels[cur_attention_mask]
-            for cur_labels, cur_attention_mask in zip(labels, attention_mask)
+            for cur_labels, cur_attention_mask in zip(labels, attention_mask, strict=False)
         ]
 
         new_input_embeds = []
@@ -860,9 +875,12 @@ class LlavaMetaForCausalLM(ABC):
         tokenizer_model_max_length = getattr(self.config, "tokenizer_model_max_length", None)
 
         new_input_embeds = [
-            x[:tokenizer_model_max_length] for x, modality in zip(new_input_embeds, modalities)
+            x[:tokenizer_model_max_length]
+            for x, _ in zip(new_input_embeds, modalities, strict=False)
         ]
-        new_labels = [x[:tokenizer_model_max_length] for x, modality in zip(new_labels, modalities)]
+        new_labels = [
+            x[:tokenizer_model_max_length] for x, _ in zip(new_labels, modalities, strict=False)
+        ]
 
         max_len = max(x.shape[0] for x in new_input_embeds)
         batch_size = len(new_input_embeds)
@@ -881,7 +899,9 @@ class LlavaMetaForCausalLM(ABC):
             (batch_size, max_len), dtype=position_ids.dtype, device=position_ids.device
         )
 
-        for i, (cur_new_embed, cur_new_labels) in enumerate(zip(new_input_embeds, new_labels)):
+        for i, (cur_new_embed, cur_new_labels) in enumerate(
+            zip(new_input_embeds, new_labels, strict=False)
+        ):
             cur_len = cur_new_embed.shape[0]
             if getattr(self.config, "tokenizer_padding_side", "right") == "left":
                 new_input_embeds_padded.append(
@@ -950,7 +970,7 @@ class LlavaQwenModel(LlavaMetaModel, Qwen2Model):
     config_class = LlavaQwenConfig
 
     def __init__(self, config: Qwen2Config) -> None:
-        super(LlavaQwenModel, self).__init__(config)
+        super().__init__(config)
 
 
 class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
@@ -983,10 +1003,12 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         images: torch.FloatTensor | None = None,
         image_sizes: list[list[int]] | None = None,
         return_dict: bool | None = None,
-        modalities: list[str] | None = ["image"],
+        modalities: list[str] | None = None,
         dpo_forward: bool | None = False,
-        cache_position: torch.Tensor | None = None,
+        cache_position: torch.Tensor | None = None,  # noqa: ARG002
     ) -> tuple | CausalLMOutputWithPast:
+        if modalities is None:
+            modalities = ["image"]
         if inputs_embeds is None:
             (input_ids, position_ids, attention_mask, past_key_values, inputs_embeds, labels) = (
                 self.prepare_inputs_labels_for_multimodal(
@@ -1037,9 +1059,11 @@ class LlavaQwenForCausalLM(Qwen2ForCausalLM, LlavaMetaForCausalLM):
         inputs: torch.Tensor | None = None,
         images: torch.Tensor | None = None,
         image_sizes: torch.Tensor | None = None,
-        modalities: list[str] | None = ["image"],
+        modalities: list[str] | None = None,
         **kwargs: object,
     ) -> GenerateOutput | torch.LongTensor:
+        if modalities is None:
+            modalities = ["image"]
         position_ids = kwargs.pop("position_ids", None)
         attention_mask = kwargs.pop("attention_mask", None)
         if "inputs_embeds" in kwargs:

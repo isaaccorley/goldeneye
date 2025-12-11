@@ -1,10 +1,12 @@
 # Vendored from https://github.com/mbzuai-oryx/GeoChat (Apache-2.0)
+# pyright: reportGeneralTypeIssues=false
+# type: ignore
 from __future__ import annotations
 
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Final
 
 import torch
 import torch.nn as nn
@@ -430,6 +432,22 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
 
     def get_model(self) -> GeoChatLlamaModel:
         return self.model
+
+    def load_state_dict(
+        self, state_dict: dict[str, torch.Tensor], strict: bool = True, assign: bool = False
+    ) -> Any:
+        vision_prefix: Final[str] = "model.vision_tower."
+        vision_keys = [key for key in state_dict if key.startswith(vision_prefix)]
+        if vision_keys:
+            vision_state_dict = {key[len(vision_prefix) :]: state_dict[key] for key in vision_keys}
+            for key in vision_keys:
+                state_dict.pop(key)
+            vision_tower = self.get_vision_tower()
+            if vision_tower is not None:
+                if not vision_tower.is_loaded:
+                    vision_tower.load_model()
+                vision_tower.load_state_dict(vision_state_dict, strict=strict, assign=assign)
+        return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     def forward(
         self,

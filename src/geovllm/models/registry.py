@@ -1,14 +1,17 @@
 from geovllm.models.base import BaseGeoVLM
 from geovllm.models.describe_earth import DescribeEarth
 from geovllm.models.earthdial import EarthDial
-from geovllm.models.earthgpt import EarthGPT
 from geovllm.models.geochat import GeoChat
 from geovllm.models.geollava import GeoLLaVA
 from geovllm.models.geopixel import GeoPixel
 from geovllm.models.geor1 import GeoR1
 from geovllm.models.geozero import GeoZero
-from geovllm.models.sam3 import SAM3
 from geovllm.models.zoomearth import ZoomEarth
+
+try:
+    from geovllm.models.sam3 import SAM3
+except ImportError:
+    SAM3 = None
 
 _MODEL_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
@@ -21,7 +24,6 @@ _MODEL_REGISTRY: dict[str, str] = {
     "Geo-R1-3B-GRPO-GRES-1shot": "Geo-R1/Geo-R1-3B-GRPO-GRES-1shot",
     "Geo-R1-3B-GRPO-GRES-10shot": "Geo-R1/Geo-R1-3B-GRPO-GRES-10shot",
     "Geo-R1-3B-GRPO-REC-10shot": "Geo-R1/Geo-R1-3B-GRPO-REC-10shot",
-    "EarthGPT": "Pruz0/EarthGPT",
     "EarthDial-4B-RGB": "akshaydudhane/EarthDial_4B_RGB",
     "EarthDial-4B-MS": "akshaydudhane/EarthDial_4B_MS",
     "EarthDial-4B-Methane-UHI": "akshaydudhane/EarthDial_4B_Methane_UHI",
@@ -33,7 +35,7 @@ _MODEL_REGISTRY: dict[str, str] = {
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
 
-_MODEL_CLASSES: dict[str, type[BaseGeoVLM]] = {
+_MODEL_CLASSES: dict[str, type[BaseGeoVLM] | None] = {
     "GeoZero": GeoZero,
     "GeoLLaVA-8K": GeoLLaVA,
     "Geo-R1-3B-GRPO-REC-5shot": GeoR1,
@@ -44,7 +46,6 @@ _MODEL_CLASSES: dict[str, type[BaseGeoVLM]] = {
     "Geo-R1-3B-GRPO-GRES-1shot": GeoR1,
     "Geo-R1-3B-GRPO-GRES-10shot": GeoR1,
     "Geo-R1-3B-GRPO-REC-10shot": GeoR1,
-    "EarthGPT": EarthGPT,
     "EarthDial-4B-RGB": EarthDial,
     "EarthDial-4B-MS": EarthDial,
     "EarthDial-4B-Methane-UHI": EarthDial,
@@ -68,4 +69,7 @@ def load_model(model_name: str, device: str | None = None) -> BaseGeoVLM:
 
     hf_model_id = _MODEL_REGISTRY[model_name]
     model_class = _MODEL_CLASSES[model_name]
+    if model_class is None:
+        msg = f"Model {model_name} is not available (required dependencies not installed)"
+        raise ImportError(msg)
     return model_class(hf_model_id, device=device)

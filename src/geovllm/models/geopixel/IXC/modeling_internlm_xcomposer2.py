@@ -1,3 +1,5 @@
+# type: ignore
+# pyright: reportGeneralTypeIssues=false
 # Copyright (c) The InternLM team and The HuggingFace Inc. team. All rights reserved.
 #
 # This code is based on transformers/src/transformers/models/llama/modeling_llama.py
@@ -54,15 +56,14 @@ video_extensions = {".mp4", ".avi", ".mkv", ".mov", ".wmv"}
 
 
 class StoppingCriteriaSub(StoppingCriteria):
-    def __init__(self, stops=[], encounters=1):
+    def __init__(self, stops=None, encounters=1):
+        if stops is None:
+            stops = []
         super().__init__()
         self.stops = stops
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
-        for stop in self.stops:
-            if torch.all(stop == input_ids[0][-len(stop) :]).item():
-                return True
-        return False
+        return any(torch.all(stop == input_ids[0][-len(stop):]).item() for stop in self.stops)
 
 
 def get_stopping_criteria(stop_words_ids):
@@ -244,8 +245,10 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         return to_regress_tokens, targets
 
     def interleav_wrap_chat(
-        self, query, image, history=[], meta_instruction="", max_length=16384, hd_num=24
+        self, query, image, history=None, meta_instruction="", max_length=16384, hd_num=24
     ):
+        if history is None:
+            history = []
         self.max_length = max_length
         prompt = ""
         if meta_instruction:
@@ -272,7 +275,7 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         if image_nums > 1:
             hd_num = 6
         else:
-            hu_num = hd_num
+            pass
         for idx, part in enumerate(parts):
             if need_bos or len(part) > 0:
                 part_tokens = self.tokenizer(
@@ -320,10 +323,10 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
                 sp = img_split[im_id + i]
                 temp_img = img_embeds[:, st : st + sp]
                 images.append(temp_img)
-            atts_img = torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(
+            torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(
                 self.device
             )
-            img_target = (
+            (
                 torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(self.device)
                 * -100
             )
@@ -663,8 +666,10 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         return reordered_past
 
     def build_inputs(
-        self, tokenizer, query: str, history: list[tuple[str, str]] = [], meta_instruction=""
+        self, tokenizer, query: str, history: list[tuple[str, str]] = None, meta_instruction=""
     ):
+        if history is None:
+            history = []
         prompt = ""
         if meta_instruction:
             prompt += f"""<s>[UNUSED_TOKEN_146]system\n{meta_instruction}[UNUSED_TOKEN_145]\n"""
@@ -682,9 +687,9 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         self,
         tokenizer,
         query: str,
-        image: list[tuple[str, str]] = [],
+        image: list[tuple[str, str]] = None,
         hd_num: int = 24,
-        history: list[tuple[str, str]] = [],
+        history: list[tuple[str, str]] = None,
         streamer: BaseStreamer | None = None,
         max_new_tokens: int = 1024,
         do_sample: bool = True,
@@ -700,6 +705,10 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         "- InternLM-XComposer (浦语·灵笔) is capable of comprehending and articulating responses effectively based on the provided image.",
         **kwargs,
     ):
+        if history is None:
+            history = []
+        if image is None:
+            image = []
         if not use_meta:
             meta_instruction = ""
         if image is None:
@@ -742,9 +751,9 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
     def write_article(
         self,
         inst: str,
-        image: list[tuple[str, str]] = [],
+        image: list[tuple[str, str]] = None,
         hd_num: int = 25,
-        history: list[tuple[str, str]] = [],
+        history: list[tuple[str, str]] = None,
         streamer: BaseStreamer | None = None,
         max_new_tokens: int = 1024,
         do_sample: bool = True,
@@ -757,6 +766,10 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         use_meta: bool = False,
         **kwargs,
     ):
+        if history is None:
+            history = []
+        if image is None:
+            image = []
         meta_instruction = """You are an AI assistant whose name is InternLM-XComposer (浦语·灵笔).
 - InternLM-XComposer (浦语·灵笔) is a conversational language model that is developed by Shanghai AI Laboratory (上海人工智能实验室). It is designed to be helpful, honest, and harmless.
 - InternLM-XComposer (浦语·灵笔) can understand and communicate fluently in the language chosen by the user such as English and 中文.
@@ -804,7 +817,7 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
     def write_webpage(
         self,
         inst: str,
-        image: list[tuple[str, str]] = [],
+        image: list[tuple[str, str]] = None,
         max_new_tokens: int = 4800,
         do_sample: bool = True,
         num_beams: int = 2,
@@ -815,6 +828,8 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         task: str = "Instruction-aware Webpage Generation",
         **kwargs,
     ):
+        if image is None:
+            image = []
         if seed != -1:
             set_random_seed(seed, set_cudnn=True)
         with torch.no_grad():
@@ -851,7 +866,7 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
     def resume_2_webpage(
         self,
         inst: str,
-        image: list[tuple[str, str]] = [],
+        image: list[tuple[str, str]] = None,
         max_new_tokens: int = 4800,
         do_sample: bool = True,
         num_beams: int = 2,
@@ -862,6 +877,8 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         task: str = "Resume-to-Personal Page",
         **kwargs,
     ):
+        if image is None:
+            image = []
         if seed != -1:
             set_random_seed(seed, set_cudnn=True)
         try:
@@ -933,7 +950,7 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
     def screen_2_webpage(
         self,
         inst: str,
-        image: list[tuple[str, str]] = [],
+        image: list[tuple[str, str]] = None,
         max_new_tokens: int = 4800,
         do_sample: bool = True,
         num_beams: int = 2,
@@ -944,6 +961,8 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         task: str = "Screenshot-to-Webpage",
         **kwargs,
     ):
+        if image is None:
+            image = []
         if seed != -1:
             set_random_seed(seed, set_cudnn=True)
         if len(image) == 0:

@@ -30,7 +30,6 @@ print(response)
 - **GeoZero** (`hjvsl/GeoZero`)
 - **GeoLLaVA-8K** (`initiacms/GeoLLaVA-8K`) - Based on LongVA-7B
 - **Geo-R1-3B** - Qwen2.5-VL-3B based geospatial reasoning models (8 variants: REC/GRES/OVD with 1/5/10-shot)
-- **EarthGPT** (`Pruz0/EarthGPT`) - GPT2-based geospatial model
 - **EarthDial-4B** - InternVL2-based models (RGB, MS, Methane-UHI variants)
 - **geochat-7B** (`MBZUAI/geochat-7B`) - Grounded Large Vision Language Model for Remote Sensing
 - **GeoPixel-7B** (`MBZUAI/GeoPixel-7B`) - Pixel grounding model for RS-GCG task

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import torch
 from PIL import Image
@@ -16,13 +17,15 @@ from geovllm.models.utils import get_device, get_dtype
 
 
 class GeoChat(BaseGeoVLM):
+    model: Any
+
     def __init__(self, model_id: str, device: str | None = None) -> None:
         super().__init__(model_id, device=device)
         self.device = get_device(device)
         self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
         self.model = AutoModelForCausalLM.from_pretrained(
             model_id,
-            torch_dtype=get_dtype(self.device),
+            dtype=get_dtype(self.device),
             low_cpu_mem_usage=True,
             device_map=self.device,
         )
@@ -70,8 +73,9 @@ class GeoChat(BaseGeoVLM):
             "The assistant gives helpful, detailed, and polite answers to the human's questions. "
             f"USER: <image>\n{prompt} ASSISTANT:"
         )
-        input_ids = tokenizer_image_token(conv_prompt, self.tokenizer, return_tensors="pt")
-        input_ids = input_ids.unsqueeze(0).to(self.device)
+        input_ids_result = tokenizer_image_token(conv_prompt, self.tokenizer, return_tensors="pt")
+        assert isinstance(input_ids_result, torch.Tensor)
+        input_ids = input_ids_result.unsqueeze(0).to(self.device)
 
         with torch.inference_mode():
             output_ids = self.model.generate(

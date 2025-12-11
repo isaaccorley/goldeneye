@@ -3,6 +3,7 @@ from typing import Any
 
 import torch
 from PIL import Image
+from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
 from geovllm.models.base import BaseGeoVLM
@@ -53,7 +54,6 @@ class GeoR1(BaseGeoVLM):
         text = self.processor.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
-        from qwen_vl_utils import process_vision_info
 
         image_inputs, video_inputs = process_vision_info(messages)
         inputs: dict[str, Any] = self.processor(
