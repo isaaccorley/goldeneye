@@ -7,8 +7,9 @@ from PIL import Image
 from sam3.model.sam3_image_processor import Sam3Processor
 from sam3.model_builder import build_sam3_image_model
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device
+from goldeneye.report import Report
 
 _BPE_VOCAB_URL = (
     "https://huggingface.co/spaces/LanguageBind/LanguageBind/resolve/main/"
@@ -42,9 +43,11 @@ def _ensure_bpe_vocab() -> None:
         ) from e
 
 
-class SAM3(BaseGeoVLM):
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+class SAM3(BaseAgent):
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
 
         _ensure_bpe_vocab()
@@ -53,26 +56,23 @@ class SAM3(BaseGeoVLM):
         if self.device and "cuda" in str(self.device):
             self.model = self.model.to(self.device)
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
         _ = image, prompt, max_new_tokens
-        return ""
+        response = ""
+        return Report(image=image, prompt=prompt, response=response)
 
     def referring_segmentation(
         self, image: str | Path | Image.Image, prompt: str
     ) -> tuple[list, list]:
-        pil_image = self._load_image(image)
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         inference_state = self.processor.set_image(pil_image)
         output = self.processor.set_text_prompt(state=inference_state, prompt=prompt)
 

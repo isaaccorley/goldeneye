@@ -5,7 +5,7 @@ import torch
 from PIL import Image
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.geochat.modeling_geochat import (
     DEFAULT_IM_END_TOKEN,
     DEFAULT_IM_START_TOKEN,
@@ -14,18 +14,22 @@ from goldeneye.models.geochat.modeling_geochat import (
     tokenizer_image_token,
 )
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 
-class GeoChat(BaseGeoVLM):
+class GeoChat(BaseAgent):
     model: Any
 
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+        self.dtype = get_dtype(self.device, dtype)
+        self.tokenizer = AutoTokenizer.from_pretrained(codename, use_fast=False)
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            dtype=get_dtype(self.device),
+            codename,
+            dtype=self.dtype,
             low_cpu_mem_usage=True,
             device_map=self.device,
         )
@@ -48,25 +52,21 @@ class GeoChat(BaseGeoVLM):
         vision_tower = self.model.get_vision_tower()
         if not vision_tower.is_loaded:
             vision_tower.load_model()
-        vision_tower.to(device=self.device, dtype=get_dtype(self.device))
+        vision_tower.to(device=self.device, dtype=self.dtype)
         self.image_processor = vision_tower.image_processor
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        pil_image = self._load_image(image)
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         image_tensor = process_images([pil_image], self.image_processor, self.model.config)
-        image_tensor = image_tensor.to(self.device, dtype=get_dtype(self.device))
+        image_tensor = image_tensor.to(self.device, dtype=self.dtype)
 
         conv_prompt = (
             "A chat between a curious human and an artificial intelligence assistant. "
@@ -77,13 +77,13 @@ class GeoChat(BaseGeoVLM):
         assert isinstance(input_ids_result, torch.Tensor)
         input_ids = input_ids_result.unsqueeze(0).to(self.device)
 
-        with torch.inference_mode():
-            output_ids = self.model.generate(
-                input_ids,
-                images=image_tensor,
-                max_new_tokens=max_new_tokens,
-                do_sample=False,
-                use_cache=True,
-            )
+        output_ids = self.model.generate(
+            input_ids,
+            images=image_tensor,
+            max_new_tokens=max_new_tokens,
+            do_sample=False,
+            use_cache=True,
+        )
         output_ids_trimmed = output_ids[0, input_ids.shape[1] :]
-        return self.tokenizer.decode(output_ids_trimmed, skip_special_tokens=True).strip()
+        response = self.tokenizer.decode(output_ids_trimmed, skip_special_tokens=True).strip()
+        return Report(image=image, prompt=prompt, response=response)

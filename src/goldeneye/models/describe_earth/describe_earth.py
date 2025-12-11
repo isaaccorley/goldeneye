@@ -13,8 +13,9 @@ import torch
 from PIL import Image
 from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2_5_VLProcessor
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 IMAGE_FACTOR = 28
 MIN_PIXELS = 4 * 28 * 28
@@ -193,37 +194,33 @@ def crop_aabb_bbox(
     return crop.resize((224, 224), Image.Resampling.LANCZOS)
 
 
-class DescribeEarth(BaseGeoVLM):
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+class DescribeEarth(BaseAgent):
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
-        self.processor = Qwen2_5_VLProcessor.from_pretrained(model_id, trust_remote_code=True)
+        self.dtype = get_dtype(self.device, dtype)
+        self.processor = Qwen2_5_VLProcessor.from_pretrained(codename, trust_remote_code=True)
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id,
-            dtype=get_dtype(self.device),
+            codename,
+            dtype=self.dtype,
             device_map=self.device,
             trust_remote_code=True,
         )
         self.model.eval()
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
         self,
         image: str | Path | Image.Image,
-        prompt: str,
+        prompt: str = "Describe this image in detail.",
         max_new_tokens: int = 64,
         bbox: np.ndarray | None = None,
-    ) -> str:
-        pil_image = self._load_image(image)
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         if bbox is not None:
             focal = crop_aabb_bbox(pil_image, bbox)
             bbox_coords = (
@@ -263,9 +260,9 @@ class DescribeEarth(BaseGeoVLM):
         if focal_inputs is not None:
             processor_kwargs["focal_crop"] = focal_inputs
         inputs = self.processor(**processor_kwargs).to(self.model.device)
-        with torch.inference_mode():
-            gen_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens, use_cache=False)
+        gen_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens, use_cache=False)
         gen_ids_trim = [oid[len(iid) :] for iid, oid in zip(inputs.input_ids, gen_ids, strict=True)]
-        return self.processor.batch_decode(
+        response = self.processor.batch_decode(
             gen_ids_trim, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )[0]
+        return Report(image=image, prompt=prompt, response=response)

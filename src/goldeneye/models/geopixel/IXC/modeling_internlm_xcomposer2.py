@@ -63,7 +63,7 @@ class StoppingCriteriaSub(StoppingCriteria):
         self.stops = stops
 
     def __call__(self, input_ids: torch.LongTensor, scores: torch.FloatTensor):
-        return any(torch.all(stop == input_ids[0][-len(stop):]).item() for stop in self.stops)
+        return any(torch.all(stop == input_ids[0][-len(stop) :]).item() for stop in self.stops)
 
 
 def get_stopping_criteria(stop_words_ids):
@@ -323,13 +323,8 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
                 sp = img_split[im_id + i]
                 temp_img = img_embeds[:, st : st + sp]
                 images.append(temp_img)
-            torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(
-                self.device
-            )
-            (
-                torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(self.device)
-                * -100
-            )
+            torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(self.device)
+            (torch.ones((len(images), images[0].shape[1]), dtype=torch.long).to(self.device) * -100)
 
             if image_num == 1 and text.find("<ImageHere>") == -1:
                 text = "<ImageHere>" + text

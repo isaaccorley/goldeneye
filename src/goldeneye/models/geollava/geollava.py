@@ -8,13 +8,14 @@ from PIL import Image
 from transformers import AutoConfig, AutoTokenizer
 
 import goldeneye.models.geollava._longva_inference  # noqa: F401
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.geollava._longva_inference import (
     IMAGE_TOKEN_INDEX,
     LlavaQwenForCausalLM,
     process_images,
 )
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 _GEOLLAVA_DIR: Final[Path] = Path(__file__).parent
 
@@ -23,37 +24,30 @@ def _ensure_longva_registered() -> None:
     pass
 
 
-class GeoLLaVA(BaseGeoVLM):
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+class GeoLLaVA(BaseAgent):
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
+        self.dtype = get_dtype(self.device, dtype)
         _ensure_longva_registered()
 
         self._process_images = process_images
 
-        self.tokenizer = AutoTokenizer.from_pretrained(model_id, use_fast=False)
+        self.tokenizer = AutoTokenizer.from_pretrained(codename, use_fast=False)
 
-        config = AutoConfig.from_pretrained(model_id)
+        config = AutoConfig.from_pretrained(codename)
         config.model_type = "llava_qwen"
 
         self.model = LlavaQwenForCausalLM.from_pretrained(
-            model_id,
+            codename,
             config=config,
-            dtype=get_dtype(self.device),
+            dtype=self.dtype,
             device_map=self.device,
             low_cpu_mem_usage=True,
         )
         self.model.eval()
-
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
 
     def _tokenize_with_image_token(self, text: str) -> torch.Tensor:
         prompt_chunks = [self.tokenizer(chunk).input_ids for chunk in text.split("<image>")]
@@ -77,21 +71,27 @@ class GeoLLaVA(BaseGeoVLM):
         return torch.tensor(input_ids, dtype=torch.long)
 
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        pil_image = self._load_image(image)
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         image_size = pil_image.size
 
         vision_tower = self.model.get_vision_tower()
         if not vision_tower.is_loaded:
             vision_tower.load_model()
-        vision_tower.to(device=self.device, dtype=self.model.dtype)
+        vision_tower.to(device=self.device, dtype=self.dtype)
         image_processor = vision_tower.image_processor
 
         image_tensor = self._process_images([pil_image], image_processor, self.model.config)
         if isinstance(image_tensor, torch.Tensor):
             image_tensor = [image_tensor[i] for i in range(image_tensor.shape[0])]
-        image_tensor = [t.to(self.device, dtype=self.model.dtype) for t in image_tensor]
+        image_tensor = [t.to(self.device, dtype=self.dtype) for t in image_tensor]
 
         messages = [{"role": "user", "content": f"<image>\n{prompt}"}]
         formatted_prompt = self.tokenizer.apply_chat_template(
@@ -100,15 +100,15 @@ class GeoLLaVA(BaseGeoVLM):
 
         input_ids = self._tokenize_with_image_token(formatted_prompt).unsqueeze(0).to(self.device)
 
-        with torch.inference_mode():
-            output_ids = self.model.generate(
-                input_ids,
-                images=image_tensor,
-                image_sizes=[image_size],
-                do_sample=False,
-                max_new_tokens=max_new_tokens,
-                use_cache=True,
-            )
+        output_ids = self.model.generate(
+            input_ids,
+            images=image_tensor,
+            image_sizes=[image_size],
+            do_sample=False,
+            max_new_tokens=max_new_tokens,
+            use_cache=True,
+        )
 
         output_text = self.tokenizer.decode(output_ids[0], skip_special_tokens=True).strip()
-        return output_text
+        response = output_text
+        return Report(image=image, prompt=prompt, response=response)

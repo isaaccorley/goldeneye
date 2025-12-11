@@ -6,42 +6,42 @@ from PIL import Image
 from qwen_vl_utils import process_vision_info
 from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 DEFAULT_PROCESSOR = "Qwen/Qwen2.5-VL-3B-Instruct"
 
 
-class GeoR1(BaseGeoVLM):
+class GeoR1(BaseAgent):
     processor: Any
     model: Qwen2_5_VLForConditionalGeneration
 
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
+        self.dtype = get_dtype(self.device, dtype)
         self.processor = AutoProcessor.from_pretrained(DEFAULT_PROCESSOR, trust_remote_code=True)
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id,
-            dtype=get_dtype(self.device),
+            codename,
+            dtype=self.dtype,
             device_map=self.device,
             trust_remote_code=True,
         )
         self.model.eval()
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        pil_image = self._load_image(image)
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         messages = [
             {
                 "role": "user",
@@ -64,10 +64,9 @@ class GeoR1(BaseGeoVLM):
             return_tensors="pt",
         )
         inputs = {k: v.to(self.device) for k, v in inputs.items()}
-        with torch.inference_mode():
-            generated_ids = self.model.generate(
-                **inputs, max_new_tokens=max_new_tokens, do_sample=False
-            )
+        generated_ids = self.model.generate(
+            **inputs, max_new_tokens=max_new_tokens, do_sample=False
+        )
         input_len = inputs["input_ids"].shape[1]
         generated_ids_trimmed = generated_ids[:, input_len:]
         output_text = self.processor.batch_decode(
@@ -75,4 +74,5 @@ class GeoR1(BaseGeoVLM):
             skip_special_tokens=True,
             clean_up_tokenization_spaces=False,
         )
-        return output_text[0].strip()
+        response = output_text[0].strip()
+        return Report(image=image, prompt=prompt, response=response)

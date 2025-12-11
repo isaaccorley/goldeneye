@@ -1,4 +1,6 @@
-from goldeneye.models.base import BaseGeoVLM
+import torch
+
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.describe_earth import DescribeEarth
 from goldeneye.models.earthdial import EarthDial
 from goldeneye.models.geochat import GeoChat
@@ -6,14 +8,10 @@ from goldeneye.models.geollava import GeoLLaVA
 from goldeneye.models.geopixel import GeoPixel
 from goldeneye.models.geor1 import GeoR1
 from goldeneye.models.geozero import GeoZero
+from goldeneye.models.sam3 import SAM3
 from goldeneye.models.zoomearth import ZoomEarth
 
-try:
-    from goldeneye.models.sam3 import SAM3
-except ImportError:
-    SAM3 = None
-
-_MODEL_REGISTRY: dict[str, str] = {
+_AGENT_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
     "GeoLLaVA-8K": "initiacms/GeoLLaVA-8K",
     "Geo-R1-3B-GRPO-REC-5shot": "Geo-R1/Geo-R1-3B-GRPO-REC-5shot",
@@ -35,7 +33,7 @@ _MODEL_REGISTRY: dict[str, str] = {
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
 
-_MODEL_CLASSES: dict[str, type[BaseGeoVLM] | None] = {
+_AGENT_CLASSES: dict[str, type[BaseAgent] | None] = {
     "GeoZero": GeoZero,
     "GeoLLaVA-8K": GeoLLaVA,
     "Geo-R1-3B-GRPO-REC-5shot": GeoR1,
@@ -58,18 +56,20 @@ _MODEL_CLASSES: dict[str, type[BaseGeoVLM] | None] = {
 }
 
 
-def list_models() -> list[str]:
-    return list(_MODEL_REGISTRY.keys())
+def assets() -> list[str]:
+    return list(_AGENT_REGISTRY.keys())
 
 
-def load_agent(model_name: str, device: str | None = None) -> BaseGeoVLM:
-    if model_name not in _MODEL_REGISTRY:
-        msg = f"Model {model_name} not found. Available models: {list_models()}"
+def dispatch_agent(
+    codename: str, device: str | None = None, dtype: torch.dtype | None = None
+) -> BaseAgent:
+    if codename not in _AGENT_REGISTRY:
+        msg = f"Agent {codename} not found. Available agents: {assets()}"
         raise ValueError(msg)
 
-    hf_model_id = _MODEL_REGISTRY[model_name]
-    model_class = _MODEL_CLASSES[model_name]
-    if model_class is None:
-        msg = f"Model {model_name} is not available (required dependencies not installed)"
+    hf_model_id = _AGENT_REGISTRY[codename]
+    agent_class = _AGENT_CLASSES[codename]
+    if agent_class is None:
+        msg = f"Agent {codename} is not supported"
         raise ImportError(msg)
-    return model_class(hf_model_id, device=device)
+    return agent_class(hf_model_id, device=device, dtype=dtype)

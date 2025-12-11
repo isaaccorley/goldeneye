@@ -5,42 +5,41 @@ from PIL import Image
 from transformers import AutoProcessor
 from transformers.models.qwen3_vl import Qwen3VLForConditionalGeneration
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 
-class GeoZero(BaseGeoVLM):
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+class GeoZero(BaseAgent):
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
-        repo_id = model_id
+        self.dtype = get_dtype(self.device, dtype)
+        repo_id = codename
         self.processor = AutoProcessor.from_pretrained(
             repo_id, subfolder="GeoZero-8B-without-RFT", trust_remote_code=True
         )
         self.model = Qwen3VLForConditionalGeneration.from_pretrained(
             repo_id,
             subfolder="GeoZero-8B-without-RFT",
-            dtype=get_dtype(self.device),
+            dtype=self.dtype,
             device_map=self.device,
             trust_remote_code=True,
         )
         self.model.eval()
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
-    @torch.inference_mode()
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        pil_image = self._load_image(image)
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         messages = [
             {
                 "role": "user",
@@ -69,4 +68,5 @@ class GeoZero(BaseGeoVLM):
         output_text = self.processor.batch_decode(
             generated_ids_trimmed, skip_special_tokens=True, clean_up_tokenization_spaces=False
         )
-        return output_text[0]
+        response = output_text[0]
+        return Report(image=image, prompt=prompt, response=response)

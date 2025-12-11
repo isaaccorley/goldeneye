@@ -1,4 +1,5 @@
-from goldeneye.models import list_models, load_agent
+from goldeneye import hud
+from goldeneye.models import assets, dispatch_agent
 
-__all__ = ["load_agent", "list_models"]
+__all__ = ["assets", "dispatch_agent", "hud"]
 __version__ = "0.1.0"

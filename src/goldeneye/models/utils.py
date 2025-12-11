@@ -11,7 +11,9 @@ def get_device(device: str | None = None) -> str:
     return "cpu"
 
 
-def get_dtype(device: str | None) -> torch.dtype:
+def get_dtype(device: str | None, dtype: torch.dtype | None = None) -> torch.dtype:
+    if dtype is not None:
+        return dtype
     if device == "mps":
         return torch.float16
     return torch.bfloat16

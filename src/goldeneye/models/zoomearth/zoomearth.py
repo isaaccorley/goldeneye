@@ -1,14 +1,16 @@
 import re
 from pathlib import Path
 
+import torch
 from PIL import Image
 from transformers import (
     Qwen2_5_VLForConditionalGeneration,
     Qwen2_5_VLProcessor,
 )
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 
 def chat_batch(
@@ -131,36 +133,35 @@ Rules:
 """  # noqa: E501
 
 
-class ZoomEarth(BaseGeoVLM):
+class ZoomEarth(BaseAgent):
     processor: Qwen2_5_VLProcessor
     model: Qwen2_5_VLForConditionalGeneration
 
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
-        self.processor = Qwen2_5_VLProcessor.from_pretrained(model_id, trust_remote_code=True)
+        self.dtype = get_dtype(self.device, dtype)
+        self.processor = Qwen2_5_VLProcessor.from_pretrained(codename, trust_remote_code=True)
         self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            model_id,
-            dtype=get_dtype(self.device),
+            codename,
+            dtype=self.dtype,
             device_map=self.device,
             trust_remote_code=True,
         )
         self.model.eval()
 
-    def _load_image(self, image: str | Path | Image.Image) -> Image.Image:
-        if isinstance(image, (str, Path)):
-            return Image.open(image).convert("RGB")
-        return image.convert("RGB")
-
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        pil_image = self._load_image(image)
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
+        if isinstance(image, (str, Path)):
+            pil_image = Image.open(image).convert("RGB")
+        else:
+            pil_image = image.convert("RGB")
         scale = max(1, max(pil_image.width, pil_image.height) / 1024)
         resized_image = resize_image(pil_image)
         full_prompt = PREFIX + prompt + INSTRUCTION
@@ -175,7 +176,10 @@ class ZoomEarth(BaseGeoVLM):
         if bboxs:
             bbox_float = bboxs[0]
             bbox = [int(x) for x in bbox_float]
-            image_bbox = self._load_image(image)
+            if isinstance(image, (str, Path)):
+                image_bbox = Image.open(image).convert("RGB")
+            else:
+                image_bbox = image.convert("RGB")
             image_bbox = resize_image(cut_image(image_bbox, bbox))
             new_prompt = (
                 PREFIX
@@ -191,5 +195,7 @@ class ZoomEarth(BaseGeoVLM):
                 self.model,
                 max_new_tokens=max_new_tokens,
             )[0]
-            return output1.split("<answer>")[0] + output2
-        return output1
+            response = output1.split("<answer>")[0] + output2
+        else:
+            response = output1
+        return Report(image=image, prompt=prompt, response=response)

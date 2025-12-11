@@ -17,12 +17,13 @@ from sam2.utils.transforms import SAM2Transforms
 from transformers import AutoModelForCausalLM, AutoTokenizer, TextStreamer
 from transformers.modeling_outputs import CausalLMOutputWithPast
 
-from goldeneye.models.base import BaseGeoVLM
+from goldeneye.models.base import BaseAgent
 from goldeneye.models.geopixel.IXC.modeling_internlm2 import InternLM2Model
 from goldeneye.models.geopixel.IXC.modeling_internlm_xcomposer2 import (
     InternLMXComposer2ForCausalLM,
 )
 from goldeneye.models.utils import get_device, get_dtype
+from goldeneye.report import Report
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
@@ -465,12 +466,15 @@ class GeoPixelForCausalLM(InternLMXComposer2ForCausalLM):
         return response, all_pred_masks
 
 
-class GeoPixel(BaseGeoVLM):
-    def __init__(self, model_id: str, device: str | None = None) -> None:
-        super().__init__(model_id, device=device)
+class GeoPixel(BaseAgent):
+    def __init__(
+        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    ) -> None:
+        super().__init__(codename, device=device, dtype=dtype)
         self.device = get_device(device)
+        self.dtype = get_dtype(self.device, dtype)
         self.tokenizer = AutoTokenizer.from_pretrained(
-            model_id, trust_remote_code=True, padding_side="right", use_fast=False
+            codename, trust_remote_code=True, padding_side="right", use_fast=False
         )
         if self.tokenizer.pad_token is None:
             self.tokenizer.pad_token = self.tokenizer.unk_token
@@ -481,10 +485,10 @@ class GeoPixel(BaseGeoVLM):
             "seg_token_idx": seg_token_idx,
             "bop_token_idx": self.tokenizer("<p>", add_special_tokens=False).input_ids[0],
             "eop_token_idx": self.tokenizer("</p>", add_special_tokens=False).input_ids[0],
-            "dtype": get_dtype(self.device),
+            "dtype": self.dtype,
         }
         self.model = AutoModelForCausalLM.from_pretrained(
-            model_id,
+            codename,
             low_cpu_mem_usage=True,
             device_map=self.device,
             trust_remote_code=True,
@@ -503,16 +507,14 @@ class GeoPixel(BaseGeoVLM):
             image.convert("RGB").save(f.name)
             return f.name
 
-    def __call__(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
-        return self.recon(image, prompt, max_new_tokens=max_new_tokens)
-
     def recon(
-        self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
-    ) -> str:
+        self,
+        image: str | Path | Image.Image,
+        prompt: str = "Describe this image in detail.",
+        max_new_tokens: int = 64,
+    ) -> Report:
         response, _ = self._evaluate(image, prompt, max_new_tokens)
-        return response
+        return Report(image=image, prompt=prompt, response=response)
 
     def generate_with_masks(
         self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int = 64
@@ -525,12 +527,11 @@ class GeoPixel(BaseGeoVLM):
         ]
         return response, masks
 
+    @torch.inference_mode()
     def _evaluate(
         self, image: str | Path | Image.Image, prompt: str, max_new_tokens: int
     ) -> tuple[str, list]:
         image_path = self._to_path(image)
-        device_type = (self.device or "cpu").split(":")[0]
-        with torch.autocast(device_type=device_type, dtype=torch.bfloat16):  # type: ignore[misc]
-            return self.model.evaluate(  # type: ignore[union-attr]
-                self.tokenizer, prompt, images=[image_path], max_new_tokens=max_new_tokens
-            )
+        return self.model.evaluate(  # type: ignore[union-attr]
+            self.tokenizer, prompt, images=[image_path], max_new_tokens=max_new_tokens
+        )
