@@ -55,7 +55,7 @@ class GeoR1(BaseAgent):
             messages, tokenize=False, add_generation_prompt=True
         )
 
-        image_inputs, video_inputs = process_vision_info(messages)
+        image_inputs, video_inputs, _ = process_vision_info(messages)
         inputs: dict[str, Any] = self.processor(
             text=[text],
             images=image_inputs,

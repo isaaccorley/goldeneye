@@ -1,15 +1,13 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import torch
 
 from goldeneye.models.base import BaseAgent
-from goldeneye.models.describe_earth import DescribeEarth
-from goldeneye.models.earthdial import EarthDial
-from goldeneye.models.geochat import GeoChat
-from goldeneye.models.geollava import GeoLLaVA
-from goldeneye.models.geopixel import GeoPixel
-from goldeneye.models.geor1 import GeoR1
-from goldeneye.models.geozero import GeoZero
-from goldeneye.models.sam3 import SAM3
-from goldeneye.models.zoomearth import ZoomEarth
+
+if TYPE_CHECKING:
+    pass
 
 _AGENT_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
@@ -33,27 +31,35 @@ _AGENT_REGISTRY: dict[str, str] = {
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
 
-_AGENT_CLASSES: dict[str, type[BaseAgent] | None] = {
-    "GeoZero": GeoZero,
-    "GeoLLaVA-8K": GeoLLaVA,
-    "Geo-R1-3B-GRPO-REC-5shot": GeoR1,
-    "Geo-R1-3B-GRPO-GRES-5shot": GeoR1,
-    "Geo-R1-3B-GRPO-OVD-5shot": GeoR1,
-    "Geo-R1-3B-GRPO-OVD-10shot": GeoR1,
-    "Geo-R1-3B-GRPO-REC-1shot": GeoR1,
-    "Geo-R1-3B-GRPO-GRES-1shot": GeoR1,
-    "Geo-R1-3B-GRPO-GRES-10shot": GeoR1,
-    "Geo-R1-3B-GRPO-REC-10shot": GeoR1,
-    "EarthDial-4B-RGB": EarthDial,
-    "EarthDial-4B-MS": EarthDial,
-    "EarthDial-4B-Methane-UHI": EarthDial,
-    "geochat-7B": GeoChat,
-    "GeoPixel-7B-RES": GeoPixel,
-    "GeoPixel-7B": GeoPixel,
-    "SAM3": SAM3,
-    "ZoomEarth-3B": ZoomEarth,
-    "DescribeEarth": DescribeEarth,
+_AGENT_CLASS_PATHS: dict[str, tuple[str, str]] = {
+    "GeoZero": ("goldeneye.models.geozero", "GeoZero"),
+    "GeoLLaVA-8K": ("goldeneye.models.geollava", "GeoLLaVA"),
+    "Geo-R1-3B-GRPO-REC-5shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-GRES-5shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-OVD-5shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-OVD-10shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-REC-1shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-GRES-1shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-GRES-10shot": ("goldeneye.models.geor1", "GeoR1"),
+    "Geo-R1-3B-GRPO-REC-10shot": ("goldeneye.models.geor1", "GeoR1"),
+    "EarthDial-4B-RGB": ("goldeneye.models.earthdial", "EarthDial"),
+    "EarthDial-4B-MS": ("goldeneye.models.earthdial", "EarthDial"),
+    "EarthDial-4B-Methane-UHI": ("goldeneye.models.earthdial", "EarthDial"),
+    "geochat-7B": ("goldeneye.models.geochat", "GeoChat"),
+    "GeoPixel-7B-RES": ("goldeneye.models.geopixel", "GeoPixel"),
+    "GeoPixel-7B": ("goldeneye.models.geopixel", "GeoPixel"),
+    "SAM3": ("goldeneye.models.sam3", "SAM3"),
+    "ZoomEarth-3B": ("goldeneye.models.zoomearth", "ZoomEarth"),
+    "DescribeEarth": ("goldeneye.models.describe_earth", "DescribeEarth"),
 }
+
+
+def _get_agent_class(codename: str) -> type[BaseAgent]:
+    import importlib
+
+    module_path, class_name = _AGENT_CLASS_PATHS[codename]
+    module = importlib.import_module(module_path)
+    return getattr(module, class_name)
 
 
 def assets() -> list[str]:
@@ -64,12 +70,9 @@ def dispatch_agent(
     codename: str, device: str | None = None, dtype: torch.dtype | None = None
 ) -> BaseAgent:
     if codename not in _AGENT_REGISTRY:
-        msg = f"Agent {codename} not found. Available agents: {assets()}"
+        msg = f"Model {codename} not found. Available models: {assets()}"
         raise ValueError(msg)
 
     hf_model_id = _AGENT_REGISTRY[codename]
-    agent_class = _AGENT_CLASSES[codename]
-    if agent_class is None:
-        msg = f"Agent {codename} is not supported"
-        raise ImportError(msg)
+    agent_class = _get_agent_class(codename)
     return agent_class(hf_model_id, device=device, dtype=dtype)

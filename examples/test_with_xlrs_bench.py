@@ -1,7 +1,7 @@
 import goldeneye
 from goldeneye.datasets import stream_xlrs_bench
 
-model = goldeneye.load_agent("GeoR1", device="cpu")
+model = goldeneye.dispatch_agent("GeoR1", device="cpu")
 
 print("Streaming XLRS-Bench-lite dataset (no download required)...")
 for i, sample in enumerate(stream_xlrs_bench(split="train")):

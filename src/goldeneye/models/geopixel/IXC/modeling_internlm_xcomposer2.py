@@ -46,13 +46,12 @@ except:  # noqa # pylint: disable=bare-except
 
 
 from .build_mlp import build_vision_projector, build_vision_tower
-from .ixc_utils import Image_transform, Video_transform, frame2img, get_font, load_video
+from .ixc_utils import Image_transform, get_font
 from .modeling_internlm2 import InternLM2_INPUTS_DOCSTRING, InternLM2Model, InternLM2PreTrainedModel
 
 _CONFIG_FOR_DOC = "InternLMXcomposer2Config"
 
 image_extensions = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp", ".tif"}
-video_extensions = {".mp4", ".avi", ".mkv", ".mov", ".wmv"}
 
 
 class StoppingCriteriaSub(StoppingCriteria):
@@ -177,10 +176,6 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
             if ext.lower() in image_extensions:
                 image = Image.open(image)
                 image = Image_transform(image, hd_num=hd_num)
-            elif ext.lower() in video_extensions:
-                image = load_video(image)
-                image = frame2img(image, self.font)
-                image = Video_transform(image, hd_num=hd_num)
             else:
                 print("Unknown input format", image)
                 return None

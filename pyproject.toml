@@ -1,13 +1,13 @@
 [build-system]
 build-backend = "uv_build"
-requires = ["uv-build>=0.9.3,<0.10"]
+requires = [ "uv-build>=0.9.3,<0.10" ]
 
 [project]
 name = "goldeneye"
 version = "0.1.0"
 description = "Simple unified interface for geospatial vision-language models."
 readme = "README.md"
-authors = [{ name = "Isaac Corley", email = "isaac.corley@proton.me" }]
+authors = [ { name = "Isaac Corley", email = "isaac.corley@proton.me" } ]
 requires-python = ">=3.13"
 classifiers = [
   "Operating System :: OS Independent",
@@ -19,16 +19,15 @@ classifiers = [
 dependencies = [
   "accelerate>=1",
   "datasets>=2.14",
-  "decord>=0.6",
   "einops>=0.8",
   "hf-transfer>=0.1",
   "pillow>=10",
   "protobuf>=6.33.2",
   "qwen-vl-utils>=0.0.8",
-  "sam2>=1.1.0",
-  "sam3>=0.1.2",
+  "sam2>=1.1",
+  "sam3 @ git+https://github.com/facebookresearch/sam3.git@7b89b8fc3fa0ae8d09d9b17a284b5299e238b1b0",
   "sentencepiece>=0.2",
-  "supervision>=0.22.0",
+  "supervision>=0.22",
   "timm>=0.9.16",
   "torch>=2.9",
   "torchvision>=0.20",
@@ -50,8 +49,11 @@ dev = [
 [tool.ruff]
 target-version = "py313"
 line-length = 100
-force-exclude = true
+exclude = [
+  "src/goldeneye/models/geopixel/IXC", # vendor code
+]
 
+force-exclude = true
 lint.select = [
   "ARG", # flake8-unused-arguments
   "B",   # flake8-bugbear
@@ -94,12 +96,12 @@ lint.extend-per-file-ignores."tests/**" = [
   "SIM300",
 ]
 
-lint.isort.known-first-party = ["src"]
+lint.isort.known-first-party = [ "src" ]
 
 [tool.pytest.ini_options]
-testpaths = ["tests"]
-markers = ["integration: marks tests as slow integration tests"]
-addopts = ["-m", "not integration"]
+testpaths = [ "tests" ]
+markers = [ "integration: marks tests as slow integration tests" ]
+addopts = [ "-m", "not integration" ]
 
 [tool.numpydoc_validation]
 checks = [
@@ -122,5 +124,5 @@ checks = [
 ]
 
 [tool.ty.src]
-include = ["src", "tests"]
-exclude = ["notebooks"]
+include = [ "src", "tests" ]
+exclude = [ "notebooks", "src/goldeneye/models/geopixel" ]

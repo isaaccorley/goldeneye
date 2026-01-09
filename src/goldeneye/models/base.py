@@ -36,6 +36,8 @@ class BaseAgent(ABC):
         return self.recon(image, prompt, max_new_tokens)
 
     def referring_segmentation(
-        self, image: str | Path | Image.Image, prompt: str
+        self,
+        image: str | Path | Image.Image,  # noqa: ARG002
+        prompt: str,  # noqa: ARG002
     ) -> tuple[list, list] | None:
         return None

@@ -1,5 +1,7 @@
 # goldeneye
 
+> **WIP**: This project is under active development. APIs may change.
+
 Simple unified interface for geospatial vision-language models. Test any supported geospatial VLM with just one line of code.
 
 ## Installation
@@ -20,7 +22,7 @@ uv pip install goldeneye
 ```python
 import goldeneye
 
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
 response = model("path/to/image.jpg", "What is shown in this satellite image?")
 print(response)
 ```
@@ -44,7 +46,7 @@ print(response)
 ```python
 import goldeneye
 
-print(goldeneye.list_models())
+print(goldeneye.assets())
 ```
 
 ### Basic Usage
@@ -53,7 +55,7 @@ print(goldeneye.list_models())
 import goldeneye
 from PIL import Image
 
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 # Use with file path
 response = model("satellite_image.jpg", "Describe this image.")
@@ -72,12 +74,12 @@ response = model(image, "Describe this image in detail.", max_new_tokens=256)
 import goldeneye
 
 # Auto-detect (default)
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 # Force specific device
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
 ```
 
 ### Pixel Grounding with GeoPixel
@@ -89,7 +91,7 @@ import goldeneye
 import numpy as np
 from PIL import Image
 
-model = goldeneye.load_agent("GeoPixel-7B")
+model = goldeneye.dispatch_agent("GeoPixel-7B")
 image = Image.open("satellite_image.jpg")
 
 # Get text response with segmentation masks
@@ -111,7 +113,7 @@ for i, mask in enumerate(masks):
 import goldeneye
 from goldeneye.datasets import stream_xlrs_bench
 
-model = goldeneye.load_agent("Geo-R1-3B-GRPO-REC-5shot")
+model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
 
 for sample in stream_xlrs_bench(split="train"):
     image = sample["image"]
@@ -127,7 +129,7 @@ for sample in stream_xlrs_bench(split="train"):
 import goldeneye
 from goldeneye.datasets import stream_de_dataset
 
-model = goldeneye.load_agent("DescribeEarth")
+model = goldeneye.dispatch_agent("DescribeEarth")
 
 for sample in stream_de_dataset(split="train"):
     image = sample["image"]

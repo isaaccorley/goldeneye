@@ -172,13 +172,14 @@ Tests ignore: ANN001, ANN201, RUF029, SIM117, SIM300
 ## Adding a New Model
 
 1. Create `src/goldeneye/models/<name>/` with `__init__.py` and `<name>.py`
-2. Subclass `BaseAgent`, implement `recon()` method
-3. Register in `registry.py`: add to `_AGENT_REGISTRY` and `_AGENT_CLASSES`
-4. Add unit test in `tests/test_models.py`
+1. Subclass `BaseAgent`, implement `recon()` method
+1. Register in `registry.py`: add to `_AGENT_REGISTRY` and `_AGENT_CLASSES`
+1. Add unit test in `tests/test_models.py`
 
 ## CI
 
 GitHub Actions: `.github/workflows/ci.yaml`
+
 - `test`: `uv run pytest -vvv --cov=src`
 - `pre-commit`: `uv run pre-commit run --all-files -v`
 

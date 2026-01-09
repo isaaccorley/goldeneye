@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 from PIL import Image
 from sam3.model.sam3_image_processor import Sam3Processor
@@ -10,6 +11,9 @@ from sam3.model_builder import build_sam3_image_model
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device
 from goldeneye.report import Report
+
+if TYPE_CHECKING:
+    import torch
 
 _BPE_VOCAB_URL = (
     "https://huggingface.co/spaces/LanguageBind/LanguageBind/resolve/main/"
@@ -21,8 +25,9 @@ def _ensure_bpe_vocab() -> None:
     """Ensure BPE vocabulary file exists, downloading if necessary."""
     import sam3.model_builder as mb
 
+    module_file = mb.__file__ or ""
     bpe_path = os.path.join(
-        os.path.dirname(mb.__file__), "..", "assets", "bpe_simple_vocab_16e6.txt.gz"
+        os.path.dirname(module_file), "..", "assets", "bpe_simple_vocab_16e6.txt.gz"
     )
     bpe_path = os.path.normpath(bpe_path)
 

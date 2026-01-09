@@ -10,7 +10,7 @@ from goldeneye.datasets import stream_de_dataset
 
 def main() -> None:
     print("Loading DescribeEarth model...")
-    model = goldeneye.load_agent("DescribeEarth", device="cuda")
+    model = goldeneye.dispatch_agent("DescribeEarth", device="cuda")
     print("Model loaded!\n")
 
     print("Streaming DE-Dataset samples...")

@@ -48,7 +48,7 @@ def annotate_image(
     import numpy as np
 
     scene = np.array(image)
-    box_annotator = sv.BoxAnnotator(color=reticle_color)
+    box_annotator = sv.BoxAnnotator(color=sv.Color.from_hex(reticle_color))
     scene = box_annotator.annotate(scene=scene, detections=detections)
 
     if show_confidence and len(detections) > 0:
