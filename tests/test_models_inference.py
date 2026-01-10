@@ -10,8 +10,8 @@ LIGHT_MODELS = [
 ]
 
 HEAVY_MODELS = [
-    "EarthDial-4B-RGB",
-    "geochat-7B",
+    "EarthDial",
+    "GeoChat",
     "GeoLLaVA-8K",
 ]
 

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import copy
+import logging
 import math
 import warnings
 from io import BytesIO
@@ -222,13 +223,21 @@ class DescribeEarth(BaseAgent):
             load_kwargs["device_map"] = self.device
         # Suppress expected weight warnings - checkpoint has extra RCModel and
         # gated_cross_attn weights used for auxiliary tasks but not during inference
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                message=".*weights of the model checkpoint.*were not used.*",
-                category=UserWarning,
-            )
-            self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(codename, **load_kwargs)
+        transformers_logger = logging.getLogger("transformers.modeling_utils")
+        original_level = transformers_logger.level
+        transformers_logger.setLevel(logging.ERROR)
+        try:
+            with warnings.catch_warnings():
+                warnings.filterwarnings(
+                    "ignore",
+                    message=".*weights of the model checkpoint.*were not used.*",
+                    category=UserWarning,
+                )
+                self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
+                    codename, **load_kwargs
+                )
+        finally:
+            transformers_logger.setLevel(original_level)
         self.model.eval()
 
     def recon(

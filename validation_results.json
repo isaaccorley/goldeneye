@@ -1,0 +1,171 @@
+{
+  "timestamp": "2026-01-09T21:33:36.102177",
+  "device": "cuda",
+  "cuda_memory_gb": 23.53564453125,
+  "total_models": 16,
+  "successful": 16,
+  "failed": 0,
+  "skipped": 0,
+  "results": [
+    {
+      "model": "GeoZero",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The image shows a residential area with a variety of houses and a river running through it. The houses are mostly made of wood and have either brown or gray roofs. They are surrounded by trees and lawns, creating a suburban feel. There is a road running through the area, with a few cars parked along it.",
+      "response_length": 304,
+      "keywords_found": 10,
+      "error": null,
+      "duration_seconds": 34.61878991127014
+    },
+    {
+      "model": "GeoLLaVA-8K",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The image shows a residential area with houses, trees, and a road. The houses are built in a row along the road, and there is a driveway leading to each house. The trees are scattered throughout the area, providing greenery and shade. The context suggests that this is a suburban neighborhood where people live in single",
+      "response_length": 320,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 13.842122316360474
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-REC-5shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "This satellite image depicts a residential area surrounded by dense forest. Here are the key objects, land cover, and context:\n\n1. **Residential Structures**:\n   - Several houses are visible, each with different roof styles and sizes.\n   - Some houses have visible driveways and garages.\n\n2. **Veget",
+      "response_length": 299,
+      "keywords_found": 8,
+      "error": null,
+      "duration_seconds": 44.21900200843811
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-GRES-5shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The satellite image depicts a residential area with several houses surrounded by lush greenery. Here are the key objects, land cover, and context:\n\n1. **Houses**: There are multiple houses visible in the image, each with different architectural styles and sizes. The houses are primarily located on elevated land, with some having large",
+      "response_length": 336,
+      "keywords_found": 8,
+      "error": null,
+      "duration_seconds": 41.59846758842468
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-OVD-5shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "This satellite image shows an aerial view of a residential area surrounded by dense greenery. Here are the key objects, land cover, and context:\n\n1. **Houses**: There are several houses visible in the image, each with different architectural styles and sizes. The houses are primarily located on the lower part of the image",
+      "response_length": 323,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 41.151697397232056
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-OVD-10shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "This satellite image depicts a residential area with several key objects and land cover features:\n\n1. **Houses**: There are multiple houses visible, each with different roof styles and sizes. The houses are surrounded by lawns and gardens.\n\n2. **Trees**: The area is densely populated with trees, creating a green canopy over",
+      "response_length": 325,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 40.622188568115234
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-REC-1shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "This satellite image shows an aerial view of a residential area surrounded by dense greenery. Here are the key objects, land cover, and context:\n\n1. **Houses**: The image features several houses with varying roof shapes and colors. Some houses have visible porches or decks.\n\n2. **Trees and Vegetation**:",
+      "response_length": 304,
+      "keywords_found": 11,
+      "error": null,
+      "duration_seconds": 40.81293201446533
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-GRES-1shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The image is an aerial view of a residential area surrounded by dense greenery. Here are the key objects, land cover, and context:\n\n1. **Houses**: There are several houses visible, each with different roof styles and sizes. The houses are primarily located on the lower part of the image, near the water",
+      "response_length": 303,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 40.57582974433899
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-GRES-10shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The satellite image depicts a residential area with several key objects and land cover features:\n\n1. **Houses**: There are multiple houses visible, each with different roof styles and sizes. The houses are surrounded by greenery.\n\n2. **Trees and Vegetation**: The area is densely covered with trees and other vegetation, creating",
+      "response_length": 329,
+      "keywords_found": 10,
+      "error": null,
+      "duration_seconds": 40.27239918708801
+    },
+    {
+      "model": "Geo-R1-3B-GRPO-REC-10shot",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The satellite image depicts a residential area with several key objects and land cover features:\n\n1. **Houses**: There are multiple houses visible, each with different roof styles and sizes. The houses are surrounded by various types of vegetation.\n\n2. **Trees and Vegetation**: The area is densely covered with trees and other vegetation",
+      "response_length": 338,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 40.100090980529785
+    },
+    {
+      "model": "EarthDial-4B-RGB",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The key objects in this satellite image are the 11 buildings, 11 trees, 1 swimming-pool, 1 road, and 1 harbor. The land cover includes the buildings, trees, and swimming-pool. The context of the image is a residential or urban area with",
+      "response_length": 236,
+      "keywords_found": 10,
+      "error": null,
+      "duration_seconds": 9.627169370651245
+    },
+    {
+      "model": "EarthDial-4B-MS",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The key objects in the satellite image are land, water, and trees. There is no water in the image.",
+      "response_length": 98,
+      "keywords_found": 5,
+      "error": null,
+      "duration_seconds": 7.41736912727356
+    },
+    {
+      "model": "EarthDial-4B-Methane-UHI",
+      "status": "success",
+      "precision": "bf16",
+      "response": "In the satellite image, there is  1 large ship [[49, 44, 55, 50, 0]] located at center,  1 large ship [[49, 44, 55, 50, 0]]",
+      "response_length": 123,
+      "keywords_found": 3,
+      "error": null,
+      "duration_seconds": 9.637645244598389
+    },
+    {
+      "model": "geochat-7B",
+      "status": "success",
+      "precision": "bf16",
+      "response": "In the satellite image, there are several key objects and land cover features visible. The image shows a mix of urban and natural elements, with a variety of buildings, houses, trees, and a road. There are also several small vehicles, including a white small vehicle parked at a building at the top, and a",
+      "response_length": 305,
+      "keywords_found": 11,
+      "error": null,
+      "duration_seconds": 11.129976987838745
+    },
+    {
+      "model": "ZoomEarth-3B",
+      "status": "success",
+      "precision": "8bit",
+      "response": "<think>  \nThe global satellite image shows a residential area with multiple houses, lawns, and some commercial buildings. The landscape is predominantly green with trees and grass, interspersed with road networks connecting different properties. There are also some water bodies visible along the bottom edge of the image, with docks extending into them",
+      "response_length": 353,
+      "keywords_found": 13,
+      "error": null,
+      "duration_seconds": 15.814849138259888
+    },
+    {
+      "model": "DescribeEarth",
+      "status": "success",
+      "precision": "bf16",
+      "response": "The image depicts a residential area characterized by several key features:\n\n1. **Houses**: There are multiple houses visible, each with distinct rooftops and varying sizes. The houses are surrounded by greenery, indicating landscaped yards or gardens.\n\n2. **Trees and Vegetation**: The area is densely covered with trees,",
+      "response_length": 322,
+      "keywords_found": 9,
+      "error": null,
+      "duration_seconds": 9.957017421722412
+    }
+  ]
+}

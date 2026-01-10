@@ -1,10 +1,12 @@
-# goldeneye
+<p align="center">
+  <img src="assets/goldeneye-logo-vertical.png" alt="goldeneye logo" width="400">
+</p>
 
 [![PyPI version](https://badge.fury.io/py/goldeneye.svg)](https://badge.fury.io/py/goldeneye)
 [![Python 3.13+](https://img.shields.io/badge/python-3.13+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-Simple unified interface for geospatial vision-language models. Run any supported geospatial VLM with just a few lines of code.
+`goldeneye` is a simple and growing unified interface for geospatial vision-language models. Run any supported geospatial VLM with just a few lines of code.
 
 ## Installation
 
@@ -12,46 +14,55 @@ Simple unified interface for geospatial vision-language models. Run any supporte
 pip install goldeneye
 ```
 
-Or using [uv](https://docs.astral.sh/uv/):
-
-```bash
-uv pip install goldeneye
-```
-
 ## Quick Start
 
 ```python
 import goldeneye
 
-# List available models
+# List available agents (models)
 print(goldeneye.assets())
 
-# Load and run a model
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
-response = model("path/to/satellite_image.jpg", "What is shown in this image?")
-print(response)
+# Dispatch an agent for collecting intel
+model = goldeneye.dispatch_agent("DescribeEarth")
+report = model.recon("assets/sample.jpg", "Describe this image.")
+print(report)
+
+# Report(
+#    image='assets/sample.jpg',
+#
+#    prompt='Describe this image.',
+#
+#    response='The image depicts an aerial view of a
+#    residential area surrounded by dense greenery,
+#    likely trees and shrubs. The houses are
+#    scattered across the landscape, with varying
+#    sizes and designs, some featuring pitched roofs
+#    and others flat-roofed structures. The roads
+#    are visible as light-colored lines
+#    crisscrossing the area, connecting'
+# )
 ```
+
+<p align="center">
+  <img src="assets/sample.jpg" alt="sample satellite image" width="400">
+</p>
 
 ## Supported Models
 
-| Model                      | Size | HuggingFace ID                           | Notes                              |
-| -------------------------- | ---- | ---------------------------------------- | ---------------------------------- |
-| Geo-R1-3B-GRPO-REC-1shot   | 3B   | `Geo-R1/Geo-R1-3B-GRPO-REC-1shot`        | Referring expression comprehension |
-| Geo-R1-3B-GRPO-REC-5shot   | 3B   | `Geo-R1/Geo-R1-3B-GRPO-REC-5shot`        | Referring expression comprehension |
-| Geo-R1-3B-GRPO-REC-10shot  | 3B   | `Geo-R1/Geo-R1-3B-GRPO-REC-10shot`       | Referring expression comprehension |
-| Geo-R1-3B-GRPO-GRES-1shot  | 3B   | `Geo-R1/Geo-R1-3B-GRPO-GRES-1shot`       | Generalized RES                    |
-| Geo-R1-3B-GRPO-GRES-5shot  | 3B   | `Geo-R1/Geo-R1-3B-GRPO-GRES-5shot`       | Generalized RES                    |
-| Geo-R1-3B-GRPO-GRES-10shot | 3B   | `Geo-R1/Geo-R1-3B-GRPO-GRES-10shot`      | Generalized RES                    |
-| Geo-R1-3B-GRPO-OVD-5shot   | 3B   | `Geo-R1/Geo-R1-3B-GRPO-OVD-5shot`        | Open vocabulary detection          |
-| Geo-R1-3B-GRPO-OVD-10shot  | 3B   | `Geo-R1/Geo-R1-3B-GRPO-OVD-10shot`       | Open vocabulary detection          |
-| ZoomEarth-3B               | 3B   | `HappyBug/ZoomEarth-3B`                  | Zoom-in reasoning                  |
-| DescribeEarth              | 3B   | `earth-insights/DescribeEarth`           | RS image captioning                |
-| EarthDial-4B-RGB           | 4B   | `akshaydudhane/EarthDial_4B_RGB`         | RGB imagery                        |
-| EarthDial-4B-MS            | 4B   | `akshaydudhane/EarthDial_4B_MS`          | Multispectral imagery              |
-| EarthDial-4B-Methane-UHI   | 4B   | `akshaydudhane/EarthDial_4B_Methane_UHI` | Methane/UHI detection              |
-| geochat-7B                 | 7B   | `MBZUAI/geochat-7B`                      | Grounded RS VLM                    |
-| GeoLLaVA-8K                | 7B   | `initiacms/GeoLLaVA-8K`                  | Long-context RS VLM                |
-| GeoZero                    | 8B   | `hjvsl/GeoZero`                          | General geospatial reasoning       |
+<details open>
+<summary>Click to expand model list (7 models)</summary>
+
+| Model                   | Size | Paper                                                                                                                                | Code                                                      |
+| ----------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------- |
+| **DescribeEarth**       | 3B   | [DescribeEarth: A Global Vision-Language Dataset for Aerial and Satellite Image Captioning](https://arxiv.org/abs/2509.25654v1)      | [github](https://github.com/earth-insights/DescribeEarth) |
+| **ZoomEarth**           | 3B   | [ZoomEarth: A Unified Remote Sensing Framework for Multi-scale Vision-Language Tasks](https://arxiv.org/abs/2511.12267)              | [github](https://github.com/earth-insights/ZoomEarth)     |
+| **EarthDial**           | 4B   | [EarthDial: Turning Multi-sensory Earth Observations to Interactive Dialogues](https://arxiv.org/abs/2501.10724)                     | [github](https://github.com/akshaydudhane16/EarthDial)    |
+| **GeoChat**             | 7B   | [GeoChat: Grounded Large Vision-Language Model for Remote Sensing](https://arxiv.org/abs/2311.15826)                                 | [github](https://github.com/mbzuai-oryx/GeoChat)          |
+| **GeoLLaVA-8K**         | 7B   | [GeoLLaVA-8K: A Large Vision-Language Model for High-Resolution Remote Sensing Applications](https://arxiv.org/abs/2505.21375)       | [github](https://github.com/MiliLab/GeoLLaVA-8K)          |
+| **GeoZero**             | 8B   | [GeoZero: Zero-shot Geospatial Reasoning with Multimodal LLMs](https://arxiv.org/abs/2511.22645)                                     | [github](https://github.com/MiliLab/GeoZero)              |
+| **Geo-R1 (8 variants)** | 3B   | [Geo-R1: Unleashing the Power of Reinforcement Learning in Generalist Geospatial Foundation Model](https://arxiv.org/abs/2510.00072) | [github](https://github.com/om-ai-lab/Geo-R1)             |
+
+</details>
 
 ### Memory Requirements
 
@@ -62,106 +73,48 @@ print(response)
 
 ## Usage
 
-### Basic Usage
-
 ```python
+import torch
 import goldeneye
 from PIL import Image
-
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
-
-# Use with file path
-response = model("satellite_image.jpg", "Describe this image.")
-
-# Use with PIL Image
-image = Image.open("satellite_image.jpg")
-response = model(image, "What type of land use is shown here?")
-
-# Control response length
-response = model(image, "Describe this image in detail.", max_new_tokens=256)
-```
-
-### Device and Dtype Selection
-
-```python
-import torch
-import goldeneye
-
-# Auto-detect device (default)
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
-
-# Force specific device
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cuda")
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cpu")
-
-# Specify dtype
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", dtype=torch.bfloat16)
-```
-
-### Quantization (Reduce Memory Usage)
-
-```python
-import torch
-import goldeneye
 from transformers import BitsAndBytesConfig
 
-# 8-bit quantization
-config_8bit = BitsAndBytesConfig(load_in_8bit=True)
-model = goldeneye.dispatch_agent("geochat-7B", quantization_config=config_8bit)
+# Load a model (auto-detects device)
+model = goldeneye.dispatch_agent("DescribeEarth")
 
-# 4-bit quantization
-config_4bit = BitsAndBytesConfig(
-    load_in_4bit=True,
-    bnb_4bit_compute_dtype=torch.float16,
-)
-model = goldeneye.dispatch_agent("GeoZero", quantization_config=config_4bit)
+# Or specify device/dtype
+model = goldeneye.dispatch_agent("DescribeEarth", device="cuda", dtype=torch.bfloat16)
+
+# Or use quantization for larger models
+config = BitsAndBytesConfig(load_in_8bit=True)
+model = goldeneye.dispatch_agent("GeoChat", quantization_config=config)
+
+# Run inference with file path or PIL Image
+report = model.recon("satellite_image.jpg", "Describe this image.")
+report = model.recon(Image.open("satellite_image.jpg"), "Describe this image.", max_new_tokens=256)
 ```
 
 ### Benchmark Datasets
 
-Stream geospatial benchmark datasets directly:
+<details open>
+<summary>Click to expand dataset list (2 datasets)</summary>
+
+| Dataset             | Samples | Paper                                                                                                                           | HuggingFace                                                                            |
+| ------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
+| **DE-Dataset**      | ~321k   | [DescribeEarth: A Global Vision-Language Dataset for Aerial and Satellite Image Captioning](https://arxiv.org/abs/2509.25654v1) | [earth-insights/DE-Dataset](https://huggingface.co/datasets/earth-insights/DE-Dataset) |
+| **XLRS-Bench-lite** | ~2.8k   | [XLRS-Bench: A Benchmark for Cross-Lingual Visual Reasoning in Remote Sensing](https://arxiv.org/abs/2503.23771)                | [initiacms/XLRS-Bench-lite](https://huggingface.co/datasets/initiacms/XLRS-Bench-lite) |
+
+</details>
 
 ```python
-import goldeneye
-from goldeneye.datasets import stream_xlrs_bench, stream_de_dataset
+from goldeneye.datasets import stream_de_dataset
 
-model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
-
-# XLRS-Bench-lite
-for sample in stream_xlrs_bench(split="train"):
-    response = model(sample["image"], sample.get("question", "Describe this image."))
-    break
-
-# DE-Dataset (DescribeEarth)
+# Stream samples from geospatial benchmarks
 for sample in stream_de_dataset(split="train"):
-    response = model(sample["image"], "Describe this satellite image.")
+    report = model.recon(sample["image"], "Describe this satellite image.")
     break
 ```
 
-## Development
+## Contributing
 
-```bash
-git clone https://github.com/isaaccorley/goldeneye.git
-cd goldeneye
-uv sync --all-extras
-uv run pre-commit install
-```
-
-Run tests:
-
-```bash
-uv run pytest -vvv
-```
-
-## Citation
-
-If you use goldeneye in your research, please cite the relevant model papers:
-
-- **Geo-R1**: [Unlocking VLM Geospatial Reasoning with Cross-View Reinforcement Learning](https://arxiv.org/abs/2510.00072)
-- **GeoChat**: [Grounded Large Vision-Language Model for Remote Sensing](https://arxiv.org/abs/2311.15826)
-- **EarthDial**: [A Multi-Turn Multi-Modal Dataset & Benchmark for Earth Observation](https://arxiv.org/abs/2501.10724)
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
+See [CONTRIBUTING.md](.github/CONTRIBUTING.md) for development setup and guidelines.

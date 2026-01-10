@@ -16,11 +16,9 @@ _AGENT_REGISTRY: dict[str, str] = {
     "Geo-R1-3B-GRPO-GRES-1shot": "Geo-R1/Geo-R1-3B-GRPO-GRES-1shot",
     "Geo-R1-3B-GRPO-GRES-10shot": "Geo-R1/Geo-R1-3B-GRPO-GRES-10shot",
     "Geo-R1-3B-GRPO-REC-10shot": "Geo-R1/Geo-R1-3B-GRPO-REC-10shot",
-    "EarthDial-4B-RGB": "akshaydudhane/EarthDial_4B_RGB",
-    "EarthDial-4B-MS": "akshaydudhane/EarthDial_4B_MS",
-    "EarthDial-4B-Methane-UHI": "akshaydudhane/EarthDial_4B_Methane_UHI",
-    "geochat-7B": "MBZUAI/geochat-7B",
-    "ZoomEarth-3B": "HappyBug/ZoomEarth-3B",
+    "EarthDial": "akshaydudhane/EarthDial_4B_RGB",
+    "GeoChat": "MBZUAI/geochat-7B",
+    "ZoomEarth": "HappyBug/ZoomEarth-3B",
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
 
@@ -35,11 +33,9 @@ _AGENT_CLASS_PATHS: dict[str, tuple[str, str]] = {
     "Geo-R1-3B-GRPO-GRES-1shot": ("goldeneye.models.geor1", "GeoR1"),
     "Geo-R1-3B-GRPO-GRES-10shot": ("goldeneye.models.geor1", "GeoR1"),
     "Geo-R1-3B-GRPO-REC-10shot": ("goldeneye.models.geor1", "GeoR1"),
-    "EarthDial-4B-RGB": ("goldeneye.models.earthdial", "EarthDial"),
-    "EarthDial-4B-MS": ("goldeneye.models.earthdial", "EarthDial"),
-    "EarthDial-4B-Methane-UHI": ("goldeneye.models.earthdial", "EarthDial"),
-    "geochat-7B": ("goldeneye.models.geochat", "GeoChat"),
-    "ZoomEarth-3B": ("goldeneye.models.zoomearth", "ZoomEarth"),
+    "EarthDial": ("goldeneye.models.earthdial", "EarthDial"),
+    "GeoChat": ("goldeneye.models.geochat", "GeoChat"),
+    "ZoomEarth": ("goldeneye.models.zoomearth", "ZoomEarth"),
     "DescribeEarth": ("goldeneye.models.describe_earth", "DescribeEarth"),
 }
 
@@ -87,5 +83,8 @@ def dispatch_agent(
     hf_model_id = _AGENT_REGISTRY[codename]
     agent_class = _get_agent_class(codename)
     return agent_class(
-        hf_model_id, device=device, dtype=dtype, quantization_config=quantization_config
+        hf_model_id,
+        device=device,
+        dtype=dtype,
+        quantization_config=quantization_config,
     )
