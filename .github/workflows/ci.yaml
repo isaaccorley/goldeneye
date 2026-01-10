@@ -1,0 +1,70 @@
+name: CI
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      run_integration:
+        description: 'Run integration tests (requires GPU)'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  semantic-title-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    permissions:
+      pull-requests: read
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6.1.1
+        with:
+          types: |
+            feat
+            fix
+            chore
+            refactor
+            perf
+            test
+            ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7.2
+        with:
+            enable-cache: true
+            python-version: 3.13
+      - run: uv run --all-extras --dev pytest -vvv --cov=src
+      - name: Report Coverage
+        run: uv run --all-extras --dev coverage report -m
+
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7.2
+        with:
+            enable-cache: true
+            python-version: 3.13
+      - name: pre-commit
+        run: uv run --all-extras --dev pre-commit run --all-files -v
+
+  test-integration:
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_integration)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7.2
+        with:
+            enable-cache: true
+            python-version: 3.13
+      - name: Run integration tests
+        run: uv run --all-extras --dev pytest -vvv -m integration
