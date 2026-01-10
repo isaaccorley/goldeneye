@@ -11,7 +11,27 @@ on:
         type: boolean
         default: false
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  semantic-title-check:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6.1.1
+        with:
+          types: |
+            feat
+            fix
+            chore
+            refactor
+            perf
+            test
+            ci
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   test:
     runs-on: ubuntu-latest
     steps:
@@ -27,8 +47,8 @@ jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: astral-sh/setup-uv@v7.1
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v7.2
         with:
             enable-cache: true
             python-version: 3.13
@@ -36,7 +56,7 @@ jobs:
         run: uv run --all-extras --dev pre-commit run --all-files -v
 
   test-integration:
-    if: github.event_name == 'schedule' || (github.event_name == 'workflow_dispatch' && inputs.run_integration)
+    if: (github.event_name == 'workflow_dispatch' && inputs.run_integration)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

@@ -1,310 +1,148 @@
 #!/usr/bin/env python
-"""Validate all models can run inference on DE-Dataset with OOM fallback.
+"""Validate all models by running inference and measuring GPU memory.
 
 Usage:
     python scripts/validate_all_models.py
-    python scripts/validate_all_models.py --output results.json
+    python scripts/validate_all_models.py --output-dir renders
     python scripts/validate_all_models.py --models GeoR1-3B-GRPO-REC-5shot,DescribeEarth
 """
 
 from __future__ import annotations
 
 import argparse
+import gc
 import json
-import re
 import sys
-from dataclasses import asdict, dataclass, field
-from datetime import datetime
+import time
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Literal
 
 import torch
-from PIL import Image
 
 import goldeneye
-from goldeneye.datasets import stream_de_dataset
 from goldeneye.models.utils import create_quantization_config
 
-SKIP_MODELS: set[str] = set()
-
-RESPONSE_KEYWORDS = [
-    "building",
-    "buildings",
-    "house",
-    "houses",
-    "road",
-    "roads",
-    "street",
-    "streets",
-    "water",
-    "river",
-    "lake",
-    "ocean",
-    "sea",
-    "forest",
-    "trees",
-    "vegetation",
-    "field",
-    "fields",
-    "land",
-    "area",
-    "region",
-    "city",
-    "urban",
-    "rural",
-    "satellite",
-    "aerial",
-    "image",
-    "scene",
-    "residential",
-    "industrial",
-    "agricultural",
-    "mountain",
-    "coast",
-    "bridge",
-    "airport",
-    "parking",
-    "vehicle",
-    "ship",
-    "boat",
-    "green",
-    "blue",
-    "brown",
-]
-
 
 @dataclass
-class ModelResult:
+class ModelStats:
+    """Statistics for a single model run."""
+
     model: str
-    status: Literal["success", "load_failed", "inference_failed", "invalid_response", "skipped"]
-    precision: str = "unknown"
-    response: str | None = None
-    response_length: int = 0
-    keywords_found: int = 0
-    error: str | None = None
+    success: bool
+    gpu_memory_gb: float = 0.0
+    peak_memory_gb: float = 0.0
     duration_seconds: float = 0.0
+    quantization: str = "none"
+    error: str | None = None
 
 
-@dataclass
-class ValidationReport:
-    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-    device: str = "unknown"
-    cuda_memory_gb: float = 0.0
-    total_models: int = 0
-    successful: int = 0
-    failed: int = 0
-    skipped: int = 0
-    results: list[dict[str, Any]] = field(default_factory=list)
-
-
-def get_cuda_memory_gb() -> float:
-    if not torch.cuda.is_available():
-        return 0.0
-    return torch.cuda.get_device_properties(0).total_memory / (1024**3)
-
-
-def fetch_sample_image(split: str = "train") -> Image.Image:
-    for sample in stream_de_dataset(split=split):
-        image = sample.get("image")
-        if isinstance(image, Image.Image):
-            return image.convert("RGB")
-    msg = "No image found in DE-Dataset stream"
-    raise RuntimeError(msg)
-
-
-def validate_response(response: str, prompt: str) -> tuple[bool, int]:
-    if not response or len(response.strip()) < 10:
-        return False, 0
-
-    response_lower = response.lower()
-    keyword_count = sum(1 for kw in RESPONSE_KEYWORDS if kw in response_lower)
-
-    if keyword_count < 2:
-        return False, keyword_count
-
-    prompt_words = set(prompt.lower().split())
-    response_words = set(response_lower.split())
-    overlap = len(prompt_words.intersection(response_words))
-    if overlap > len(prompt_words) * 0.8:
-        return False, keyword_count
-
-    sentences = re.split(r"[.!?]+", response)
-    if len(sentences) < 1 or len(sentences[0].split()) < 3:
-        return False, keyword_count
-
-    return True, keyword_count
-
-
-def load_model_with_fallback(model_name: str, device: str) -> tuple[Any, str]:
-    precision_order: list[tuple[str, int | None]] = [
-        ("bf16", None),
-        ("8bit", 8),
-        ("4bit", 4),
-    ]
-
-    for precision_name, quant_bits in precision_order:
-        try:
-            if quant_bits is not None:
-                quant_config = create_quantization_config(quant_bits)  # type: ignore[arg-type]
-                model = goldeneye.dispatch_agent(
-                    model_name, device=device, quantization_config=quant_config
-                )
-            else:
-                model = goldeneye.dispatch_agent(model_name, device=device)
-
-            return model, precision_name
-
-        except RuntimeError as e:
-            if "out of memory" in str(e).lower() or "CUDA" in str(e):
-                print(f"  OOM at {precision_name}, trying lower precision...", flush=True)
-                if torch.cuda.is_available():
-                    torch.cuda.empty_cache()
-                continue
-            return None, f"load_error: {e}"
-        except Exception as e:
-            return None, f"load_error: {e}"
-
-    return None, "all_precisions_failed"
-
-
-def load_and_run_with_fallback(
-    model_name: str,
-    device: str,
-    image: Image.Image,
-    prompt: str,
-    max_new_tokens: int,
-) -> tuple[Any, str, str | None]:
-    """Load model and run inference, retrying with lower precision on OOM.
+def get_gpu_memory_gb() -> float:
+    """Get current GPU memory allocated in GB.
 
     Returns
     -------
-    tuple[Any, str, str | None]
-        (response, precision, error) - response is the model output,
-        precision is the quantization level used, error is None on success.
+    float
+        GPU memory in GB, or 0.0 if CUDA unavailable
     """
-    import gc
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.memory_allocated() / (1024**3)
 
+
+def get_peak_memory_gb() -> float:
+    """Get peak GPU memory allocated in GB.
+
+    Returns
+    -------
+    float
+        Peak GPU memory in GB, or 0.0 if CUDA unavailable
+    """
+    if not torch.cuda.is_available():
+        return 0.0
+    return torch.cuda.max_memory_allocated() / (1024**3)
+
+
+def reset_memory_stats() -> None:
+    """Reset GPU memory statistics."""
+    if torch.cuda.is_available():
+        torch.cuda.reset_peak_memory_stats()
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+
+
+def load_and_run_model(
+    model_name: str,
+    image_path: Path,
+    prompt: str,
+    device: str,
+    max_new_tokens: int = 256,
+) -> tuple[goldeneye.Report | None, str]:
+    """Load model and run inference.
+
+    Parameters
+    ----------
+    model_name : str
+        Name of the model to load
+    image_path : Path
+        Path to the input image
+    prompt : str
+        Prompt for the model
+    device : str
+        Device to run on
+    max_new_tokens : int, optional
+        Max tokens for generation, by default 256
+
+    Returns
+    -------
+    tuple[goldeneye.Report | None, str]
+        Report from model inference (or None on failure), and quantization type
+    """
     # ZoomEarth requires 8-bit quantization to avoid OOM
     if "ZoomEarth" in model_name:
-        precision_order: list[tuple[str, int | None]] = [("8bit", 8)]
+        quant_config = create_quantization_config(8)
+        quant_type = "8bit"
     else:
-        precision_order = [("bf16", None)]
+        quant_config = None
+        quant_type = "none"
 
-    model: Any = None
-    for precision_name, quant_bits in precision_order:
-        try:
-            # Load model
-            if quant_bits is not None:
-                quant_config = create_quantization_config(quant_bits)  # type: ignore[arg-type]
-                model = goldeneye.dispatch_agent(
-                    model_name, device=device, quantization_config=quant_config
-                )
-            else:
-                model = goldeneye.dispatch_agent(model_name, device=device)
-
-            print(f"  Loaded at {precision_name}, running inference...", flush=True)
-
-            # Run inference
-            result = model(image, prompt, max_new_tokens=max_new_tokens)
-
-            if hasattr(result, "response"):
-                response = result.response
-            elif isinstance(result, dict) and "response" in result:
-                response = result["response"]
-            else:
-                response = str(result)
-
-            return response, precision_name, None
-
-        except RuntimeError as e:
-            if "out of memory" in str(e).lower() or "CUDA" in str(e):
-                print(f"  OOM at {precision_name}, trying lower precision...", flush=True)
-                continue
-            return None, precision_name, f"runtime_error: {e}"
-        except Exception as e:
-            return None, precision_name, f"error: {e}"
-        finally:
-            # Clean up model thoroughly
-            if model is not None:
-                del model
-                model = None
-            gc.collect()
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-                torch.cuda.synchronize()
-
-    return None, "4bit", "all_precisions_failed_oom"
-
-
-def test_model(
-    model_name: str, image: Image.Image, prompt: str, device: str, max_new_tokens: int = 64
-) -> ModelResult:
-    import time
-
-    start_time = time.time()
-
-    if model_name in SKIP_MODELS:
-        return ModelResult(
-            model=model_name,
-            status="skipped",
-            precision="n/a",
-            error="Segmentation-only model, no captioning support",
+    try:
+        model = goldeneye.dispatch_agent(
+            model_name, device=device, quantization_config=quant_config
         )
-
-    print(f"Loading {model_name}...", flush=True)
-
-    response, precision, error = load_and_run_with_fallback(
-        model_name, device, image, prompt, max_new_tokens
-    )
-
-    if error is not None:
-        return ModelResult(
-            model=model_name,
-            status="inference_failed" if "oom" in error.lower() else "load_failed",
-            precision=precision,
-            error=error,
-            duration_seconds=time.time() - start_time,
-        )
-
-    is_valid, keyword_count = validate_response(response, prompt)  # type: ignore[arg-type]
-
-    if is_valid:
-        return ModelResult(
-            model=model_name,
-            status="success",
-            precision=precision,
-            response=response,
-            response_length=len(response),  # type: ignore[arg-type]
-            keywords_found=keyword_count,
-            duration_seconds=time.time() - start_time,
-        )
-    else:
-        return ModelResult(
-            model=model_name,
-            status="invalid_response",
-            precision=precision,
-            response=response[:200] if response else None,  # type: ignore[index]
-            response_length=len(response) if response else 0,  # type: ignore[arg-type]
-            keywords_found=keyword_count,
-            error=f"Response validation failed (keywords={keyword_count})",
-            duration_seconds=time.time() - start_time,
-        )
-
-
-def save_report(report: ValidationReport, output_path: Path) -> None:
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    with open(output_path, "w") as f:
-        json.dump(asdict(report), f, indent=2)
+        report = model.recon(image_path, prompt, max_new_tokens=max_new_tokens)
+        return report, quant_type
+    except Exception as e:
+        print(f"  Error: {e}", flush=True)
+        return None, quant_type
+    finally:
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Validate all goldeneye models")
+    """Run validation on all models.
+
+    Returns
+    -------
+    int
+        Exit code (0 for success, 1 for failure)
+    """
+    parser = argparse.ArgumentParser(description="Validate goldeneye models")
     parser.add_argument(
-        "--output",
+        "--output-dir",
         "-o",
         type=Path,
-        default=Path("validation_results.json"),
-        help="Output JSON file path",
+        default=Path("renders"),
+        help="Output directory for rendered images",
+    )
+    parser.add_argument(
+        "--image",
+        "-i",
+        type=Path,
+        default=Path("assets/sample.jpg"),
+        help="Input image path",
     )
     parser.add_argument(
         "--models",
@@ -316,87 +154,113 @@ def main() -> int:
     parser.add_argument(
         "--max-new-tokens",
         type=int,
-        default=64,
+        default=256,
         help="Max new tokens for generation",
     )
     args = parser.parse_args()
 
     device = "cuda" if torch.cuda.is_available() else "cpu"
-    cuda_memory = get_cuda_memory_gb()
-
     print(f"Device: {device}", flush=True)
-    if cuda_memory > 0:
-        print(f"CUDA memory: {cuda_memory:.1f} GB", flush=True)
 
-    report = ValidationReport(
-        device=device,
-        cuda_memory_gb=cuda_memory,
-    )
-
-    print("Fetching DE-Dataset sample...", flush=True)
-    try:
-        sample_image = fetch_sample_image()
-        print(f"Sample image size: {sample_image.size}", flush=True)
-    except Exception as e:
-        print(f"Failed to fetch sample: {e}", flush=True)
+    if not args.image.exists():
+        print(f"Image not found: {args.image}", flush=True)
         return 1
 
-    prompt = "Describe the key objects, land cover, and context in this satellite image."
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    prompt = (
+        "Describe the key objects, land cover, "
+        "and context in this satellite image."
+    )
 
     if args.models:
         model_names = [m.strip() for m in args.models.split(",")]
     else:
         model_names = goldeneye.assets()
 
-    report.total_models = len(model_names)
-
     print(f"\nTesting {len(model_names)} models...\n", flush=True)
 
-    import gc
+    results: list[ModelStats] = []
 
     for model_name in model_names:
-        # Ensure GPU memory is clean before loading each model
         gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.synchronize()
+        reset_memory_stats()
 
-        result = test_model(model_name, sample_image, prompt, device, args.max_new_tokens)
-        report.results.append(asdict(result))
+        print(f"Loading {model_name}...", flush=True)
+        start_time = time.time()
 
-        if result.status == "success":
-            report.successful += 1
-            status_str = f"✓ {result.precision}"
-        elif result.status == "skipped":
-            report.skipped += 1
-            status_str = "○ skipped"
-        else:
-            report.failed += 1
-            status_str = f"✗ {result.error}"
+        report, quant_type = load_and_run_model(
+            model_name, args.image, prompt, device, args.max_new_tokens
+        )
 
-        print(f"  {model_name}: {status_str}", flush=True)
+        duration = time.time() - start_time
+        peak_mem = get_peak_memory_gb()
 
-        save_report(report, args.output)
+        if report is None:
+            print(f"  ✗ {model_name}: Failed", flush=True)
+            results.append(
+                ModelStats(
+                    model=model_name,
+                    success=False,
+                    peak_memory_gb=peak_mem,
+                    duration_seconds=duration,
+                    quantization=quant_type,
+                    error="inference failed",
+                )
+            )
+            continue
 
-        # Clean up after each model test
-        gc.collect()
-        if torch.cuda.is_available():
-            torch.cuda.empty_cache()
-            torch.cuda.synchronize()
+        print(f"  Response: {report.response[:80]}...", flush=True)
 
-    print(f"\n{'=' * 60}", flush=True)
-    print("SUMMARY", flush=True)
-    print(f"{'=' * 60}", flush=True)
-    print(f"Total:      {report.total_models}", flush=True)
-    print(f"Successful: {report.successful}", flush=True)
-    print(f"Failed:     {report.failed}", flush=True)
-    print(f"Skipped:    {report.skipped}", flush=True)
-    print(f"\nResults saved to: {args.output}", flush=True)
+        # Render and save
+        rendered = goldeneye.hud.render(report, show_caption=True)
+        output_path = args.output_dir / f"{model_name}.png"
+        rendered.save(output_path)
 
-    non_skipped_total = report.total_models - report.skipped
-    if non_skipped_total > 0 and report.successful == non_skipped_total:
-        return 0
-    return 1 if report.failed > 0 else 0
+        stats = ModelStats(
+            model=model_name,
+            success=True,
+            peak_memory_gb=peak_mem,
+            duration_seconds=duration,
+            quantization=quant_type,
+        )
+        results.append(stats)
+
+        print(
+            f"  ✓ {model_name}: {peak_mem:.1f} GB, {duration:.1f}s",
+            flush=True,
+        )
+
+    # Print summary table
+    print(f"\n{'=' * 70}", flush=True)
+    print("GPU MEMORY USAGE SUMMARY", flush=True)
+    print(f"{'=' * 70}", flush=True)
+    print(f"{'Model':<35} {'Peak VRAM':<12} {'Time':<10} {'Status'}", flush=True)
+    print("-" * 70, flush=True)
+
+    successful = sum(1 for r in results if r.success)
+    failed = len(results) - successful
+
+    for r in results:
+        status = "✓" if r.success else "✗"
+        quant = f" ({r.quantization})" if r.quantization != "none" else ""
+        print(
+            f"{r.model:<35} {r.peak_memory_gb:>6.1f} GB    "
+            f"{r.duration_seconds:>6.1f}s    {status}{quant}",
+            flush=True,
+        )
+
+    print(f"\n{'=' * 70}", flush=True)
+    print(f"Total: {len(results)} | Success: {successful} | Failed: {failed}")
+    print(f"Renders saved to: {args.output_dir}/", flush=True)
+
+    # Save JSON report
+    json_path = args.output_dir / "memory_stats.json"
+    with open(json_path, "w") as f:
+        json.dump([asdict(r) for r in results], f, indent=2)
+    print(f"Memory stats saved to: {json_path}", flush=True)
+
+    return 0 if failed == 0 else 1
 
 
 if __name__ == "__main__":
