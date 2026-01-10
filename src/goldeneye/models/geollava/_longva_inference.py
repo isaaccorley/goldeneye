@@ -616,7 +616,7 @@ def build_vision_tower(vision_tower_cfg: object, **kwargs: object) -> CLIPVision
 
 class LlavaMetaModel:
     def __init__(self, config: object) -> None:
-        super().__init__(config)  # type: ignore[call-arg]
+        super().__init__(config)
 
         if hasattr(config, "mm_vision_tower"):
             delay_load = getattr(config, "delay_load", False)

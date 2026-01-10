@@ -1,4 +1,7 @@
+from typing import Literal
+
 import torch
+from transformers import BitsAndBytesConfig
 
 
 def get_device(device: str | None = None) -> str:
@@ -17,3 +20,14 @@ def get_dtype(device: str | None, dtype: torch.dtype | None = None) -> torch.dty
     if device == "mps":
         return torch.float16
     return torch.bfloat16
+
+
+def create_quantization_config(bits: Literal[4, 8]) -> BitsAndBytesConfig:
+    if bits == 4:
+        return BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+    return BitsAndBytesConfig(load_in_8bit=True)

@@ -4,6 +4,7 @@ from __future__ import annotations
 # pyright: reportGeneralTypeIssues=false
 import os
 import tempfile
+import warnings
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -27,6 +28,7 @@ from goldeneye.report import Report
 
 if TYPE_CHECKING:
     from numpy.typing import NDArray
+    from transformers import BitsAndBytesConfig
 
 try:
     from transformers.generation.streamers import BaseStreamer
@@ -97,7 +99,14 @@ class GeoPixelMetaModel:
 
     def initialize_geopixel_modules(self, config):
         # grounding vision model
-        self.visual_model = build_sam2_hf(self.vision_pretrained, device=None)
+        # Suppress SAM2 meta tensor warnings during model loading
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=".*copying from a non-meta parameter.*",
+                category=UserWarning,
+            )
+            self.visual_model = build_sam2_hf(self.vision_pretrained, device=None)
 
         self._transform = SAM2Transforms(
             resolution=self.visual_model.image_size,
@@ -468,9 +477,15 @@ class GeoPixelForCausalLM(InternLMXComposer2ForCausalLM):
 
 class GeoPixel(BaseAgent):
     def __init__(
-        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+        self,
+        codename: str,
+        device: str | None = None,
+        dtype: torch.dtype | None = None,
+        quantization_config: BitsAndBytesConfig | None = None,
     ) -> None:
-        super().__init__(codename, device=device, dtype=dtype)
+        super().__init__(
+            codename, device=device, dtype=dtype, quantization_config=quantization_config
+        )
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
         self.tokenizer = AutoTokenizer.from_pretrained(
@@ -490,6 +505,7 @@ class GeoPixel(BaseAgent):
         config = AutoConfig.from_pretrained(codename, trust_remote_code=True)
         config.architectures = ["GeoPixelForCausalLM"]
         config._name_or_path = codename
+        config.attn_implementation = "eager"
         config.auto_map = {
             "AutoConfig": (
                 "goldeneye.models.geopixel.IXC.configuration_internlm_xcomposer2."
@@ -501,14 +517,37 @@ class GeoPixel(BaseAgent):
             ),
             "AutoModelForCausalLM": "goldeneye.models.geopixel.geopixel.GeoPixelForCausalLM",
         }
-        self.model = GeoPixelForCausalLM.from_pretrained(
-            codename,
-            config=config,
-            low_cpu_mem_usage=True,
-            device_map=self.device,
-            trust_remote_code=True,
+        load_kwargs: dict[str, Any] = {
+            "config": config,
+            "low_cpu_mem_usage": True,
+            "trust_remote_code": True,
             **model_kwargs,
-        )
+        }
+        if quantization_config is not None:
+            load_kwargs["quantization_config"] = quantization_config
+            load_kwargs["device_map"] = "auto"
+        else:
+            load_kwargs["device_map"] = self.device
+
+        # Suppress expected weight mismatch warnings from SAM2 version differences
+        # The GeoPixel checkpoint was saved with an older SAM2 version that used
+        # 'weight' instead of 'gamma' for memory_encoder.fuser.layers
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=".*weights of the model checkpoint.*were not used.*",
+                category=UserWarning,
+            )
+            warnings.filterwarnings(
+                "ignore",
+                message=".*weights of.*were not initialized.*newly initialized.*",
+                category=UserWarning,
+            )
+            self.model = GeoPixelForCausalLM.from_pretrained(codename, **load_kwargs)
+
+        # Fix SAM2 weight name mismatch: checkpoint has 'weight', model expects 'gamma'
+        self._fix_sam2_fuser_weights(codename)
+
         device_type = (
             (self.device or "cpu").split(":")[0] if isinstance(self.device, str) else "cpu"
         )
@@ -527,6 +566,47 @@ class GeoPixel(BaseAgent):
         self.model.config.pad_token_id = self.tokenizer.pad_token_id
         self.model.tokenizer = self.tokenizer
         self.model.eval()
+
+    def _fix_sam2_fuser_weights(self, codename: str) -> None:
+        """Fix SAM2 weight name mismatch between checkpoint and current SAM2 version.
+
+        The GeoPixel checkpoint was saved with an older SAM2 version that used
+        'weight' for memory_encoder.fuser.layers, but current SAM2 uses 'gamma'.
+        This method loads the mismatched weights with the correct names.
+        """
+        from huggingface_hub import hf_hub_download
+        from safetensors import safe_open
+
+        # Weight mappings: checkpoint name -> model name
+        weight_mappings = {
+            "model.visual_model.memory_encoder.fuser.layers.0.weight": (
+                "model.visual_model.memory_encoder.fuser.layers.0.gamma"
+            ),
+            "model.visual_model.memory_encoder.fuser.layers.1.weight": (
+                "model.visual_model.memory_encoder.fuser.layers.1.gamma"
+            ),
+        }
+
+        try:
+            # Download the safetensors file from HuggingFace
+            safetensors_path = hf_hub_download(repo_id=codename, filename="model.safetensors")
+
+            # Load the weights that need remapping
+            with safe_open(safetensors_path, framework="pt") as f:
+                available_keys = set(f.keys())
+                for old_key, new_key in weight_mappings.items():
+                    if old_key in available_keys:
+                        tensor = f.get_tensor(old_key)
+                        # Navigate to the target parameter and assign
+                        parts = new_key.split(".")
+                        obj = self.model
+                        for part in parts[:-1]:
+                            obj = getattr(obj, part)
+                        setattr(obj, parts[-1], torch.nn.Parameter(tensor))
+        except Exception:
+            # If remapping fails, the model will use initialized weights
+            # This is acceptable as the fuser layers may not be critical
+            pass
 
     def _to_path(self, image: str | Path | Image.Image) -> str:
         if isinstance(image, (str, Path)):

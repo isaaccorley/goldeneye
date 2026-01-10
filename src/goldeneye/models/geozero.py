@@ -1,4 +1,7 @@
+from __future__ import annotations
+
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import torch
 from PIL import Image
@@ -9,25 +12,38 @@ from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
 
+if TYPE_CHECKING:
+    from transformers import BitsAndBytesConfig
+
 
 class GeoZero(BaseAgent):
     def __init__(
-        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+        self,
+        codename: str,
+        device: str | None = None,
+        dtype: torch.dtype | None = None,
+        quantization_config: BitsAndBytesConfig | None = None,
     ) -> None:
-        super().__init__(codename, device=device, dtype=dtype)
+        super().__init__(
+            codename, device=device, dtype=dtype, quantization_config=quantization_config
+        )
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
         repo_id = codename
         self.processor = AutoProcessor.from_pretrained(
             repo_id, subfolder="GeoZero-8B-without-RFT", trust_remote_code=True
         )
-        self.model = Qwen3VLForConditionalGeneration.from_pretrained(
-            repo_id,
-            subfolder="GeoZero-8B-without-RFT",
-            dtype=self.dtype,
-            device_map=self.device,
-            trust_remote_code=True,
-        )
+        load_kwargs: dict[str, Any] = {
+            "subfolder": "GeoZero-8B-without-RFT",
+            "trust_remote_code": True,
+        }
+        if quantization_config is not None:
+            load_kwargs["quantization_config"] = quantization_config
+            load_kwargs["device_map"] = "auto"
+        else:
+            load_kwargs["dtype"] = self.dtype
+            load_kwargs["device_map"] = self.device
+        self.model = Qwen3VLForConditionalGeneration.from_pretrained(repo_id, **load_kwargs)
         self.model.eval()
 
     def recon(
@@ -60,7 +76,7 @@ class GeoZero(BaseAgent):
         inputs = {
             k: v.to(self.device) if isinstance(v, torch.Tensor) else v for k, v in inputs.items()
         }
-        generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)  # type: ignore[arg-type]
+        generated_ids = self.model.generate(**inputs, max_new_tokens=max_new_tokens)
         generated_ids_trimmed = [
             out_ids[len(in_ids) :]
             for in_ids, out_ids in zip(inputs["input_ids"], generated_ids, strict=True)

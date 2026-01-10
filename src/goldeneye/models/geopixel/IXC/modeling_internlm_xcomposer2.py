@@ -36,6 +36,7 @@ from transformers import (
     StoppingCriteriaList,
     set_seed,
 )
+from transformers.generation import GenerationMixin
 from transformers.modeling_outputs import CausalLMOutputWithPast
 from transformers.utils import add_start_docstrings_to_model_forward, replace_return_docstrings
 
@@ -104,7 +105,7 @@ class CustomCausalLMOutputWithPast(CausalLMOutputWithPast):
     seg_token_mask: list | None = None
 
 
-class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
+class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel, GenerationMixin):
     _auto_class = "AutoModelForCausalLM"
 
     _tied_weights_keys = ["output.weight"]
@@ -116,7 +117,7 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         self.output = nn.Linear(config.hidden_size, config.vocab_size, bias=False)
         self.tokenizer = None
         self.hd_num = 25
-        self.font = get_font()
+        self._font = None  # Lazy-loaded to avoid deepcopy issues with bitsandbytes
 
         self.max_length = config.max_length
         print(f"Set max length to {self.max_length}")
@@ -136,6 +137,12 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
                 ),
             ]
         )
+
+    @property
+    def font(self):
+        if self._font is None:
+            self._font = get_font()
+        return self._font
 
     def _set_gradient_checkpointing(self, module, value=False):
         if isinstance(module, InternLM2Model):
@@ -594,8 +601,19 @@ class InternLMXComposer2ForCausalLM(InternLM2PreTrainedModel):
         infer_mode="base",
         **kwargs,
     ):
+        # Handle both legacy tuple format and DynamicCache for past_key_values
+        cache_has_content = False
+        past_length = 0
         if past_key_values is not None:
-            past_length = past_key_values[0][0].shape[2]
+            if hasattr(past_key_values, "get_seq_length"):
+                past_length = past_key_values.get_seq_length()
+                cache_has_content = past_length > 0
+            elif isinstance(past_key_values, (list, tuple)) and len(past_key_values) > 0:
+                if past_key_values[0] is not None and past_key_values[0][0] is not None:
+                    past_length = past_key_values[0][0].shape[2]
+                    cache_has_content = past_length > 0
+
+        if cache_has_content:
 
             # Some generation methods already pass only the last input ID
             if input_ids.shape[1] > past_length:

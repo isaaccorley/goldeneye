@@ -7,7 +7,7 @@ import torch
 from goldeneye.models.base import BaseAgent
 
 if TYPE_CHECKING:
-    pass
+    from transformers import BitsAndBytesConfig
 
 _AGENT_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
@@ -26,7 +26,6 @@ _AGENT_REGISTRY: dict[str, str] = {
     "geochat-7B": "MBZUAI/geochat-7B",
     "GeoPixel-7B-RES": "MBZUAI/GeoPixel-7B-RES",
     "GeoPixel-7B": "MBZUAI/GeoPixel-7B",
-    "SAM3": "facebook/sam3",
     "ZoomEarth-3B": "HappyBug/ZoomEarth-3B",
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
@@ -48,7 +47,6 @@ _AGENT_CLASS_PATHS: dict[str, tuple[str, str]] = {
     "geochat-7B": ("goldeneye.models.geochat", "GeoChat"),
     "GeoPixel-7B-RES": ("goldeneye.models.geopixel", "GeoPixel"),
     "GeoPixel-7B": ("goldeneye.models.geopixel", "GeoPixel"),
-    "SAM3": ("goldeneye.models.sam3", "SAM3"),
     "ZoomEarth-3B": ("goldeneye.models.zoomearth", "ZoomEarth"),
     "DescribeEarth": ("goldeneye.models.describe_earth", "DescribeEarth"),
 }
@@ -67,12 +65,35 @@ def assets() -> list[str]:
 
 
 def dispatch_agent(
-    codename: str, device: str | None = None, dtype: torch.dtype | None = None
+    codename: str,
+    device: str | None = None,
+    dtype: torch.dtype | None = None,
+    quantization_config: BitsAndBytesConfig | None = None,
 ) -> BaseAgent:
+    """Dispatch a geospatial VLM agent by codename.
+
+    Parameters
+    ----------
+    codename : str
+        Model identifier from assets()
+    device : str | None, optional
+        Target device ('cuda', 'cpu', 'mps'), by default None (auto-detect)
+    dtype : torch.dtype | None, optional
+        Model dtype (torch.float16, torch.bfloat16, etc.), by default None
+    quantization_config : BitsAndBytesConfig | None, optional
+        Quantization config for 4-bit or 8-bit loading, by default None
+
+    Returns
+    -------
+    BaseAgent
+        Loaded model agent ready for inference
+    """
     if codename not in _AGENT_REGISTRY:
         msg = f"Model {codename} not found. Available models: {assets()}"
         raise ValueError(msg)
 
     hf_model_id = _AGENT_REGISTRY[codename]
     agent_class = _get_agent_class(codename)
-    return agent_class(hf_model_id, device=device, dtype=dtype)
+    return agent_class(
+        hf_model_id, device=device, dtype=dtype, quantization_config=quantization_config
+    )

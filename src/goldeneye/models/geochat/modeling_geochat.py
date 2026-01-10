@@ -459,9 +459,13 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
     def load_state_dict(
         self, state_dict: dict[str, torch.Tensor], strict: bool = True, assign: bool = False
     ) -> Any:
-        vision_prefix: Final[str] = "model.vision_tower."
+        # Handle vision tower weights with nested prefix:
+        # Checkpoint keys: model.vision_tower.vision_tower.vision_model.*
+        # We need to load into: vision_tower.vision_tower (the CLIPVisionModel)
+        vision_prefix: Final[str] = "model.vision_tower.vision_tower."
         vision_keys = [key for key in state_dict if key.startswith(vision_prefix)]
         if vision_keys:
+            # Strip prefix to get: vision_model.*
             vision_state_dict = {key[len(vision_prefix) :]: state_dict[key] for key in vision_keys}
             for key in vision_keys:
                 state_dict.pop(key)
@@ -469,7 +473,11 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
             if vision_tower is not None:
                 if not vision_tower.is_loaded:
                     vision_tower.load_model()
-                vision_tower.load_state_dict(vision_state_dict, strict=strict, assign=assign)
+                # Load into the nested vision_tower (CLIPVisionModel)
+                if vision_tower.vision_tower is not None:
+                    vision_tower.vision_tower.load_state_dict(
+                        vision_state_dict, strict=False, assign=assign
+                    )
         return super().load_state_dict(state_dict, strict=strict, assign=assign)
 
     def forward(
@@ -544,7 +552,13 @@ class GeoChatLlamaForCausalLM(LlamaForCausalLM, GeoChatMetaForCausalLM):
         inputs_embeds: torch.FloatTensor | None = None,
         **kwargs: Any,
     ) -> dict:
-        if past_key_values:
+        # Check if cache actually has content, not just exists
+        # (DynamicCache can be truthy but empty)
+        cache_has_content = (
+            past_key_values is not None
+            and getattr(past_key_values, "get_seq_length", lambda: 0)() > 0
+        )
+        if cache_has_content:
             input_ids = input_ids[:, -1:]
         if inputs_embeds is not None and past_key_values is None:
             model_inputs = {"inputs_embeds": inputs_embeds}

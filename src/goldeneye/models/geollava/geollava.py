@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Final
+from typing import TYPE_CHECKING, Any, Final
 
 import torch
 from PIL import Image
@@ -17,6 +17,9 @@ from goldeneye.models.geollava._longva_inference import (
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
 
+if TYPE_CHECKING:
+    from transformers import BitsAndBytesConfig
+
 _GEOLLAVA_DIR: Final[Path] = Path(__file__).parent
 
 
@@ -26,9 +29,15 @@ def _ensure_longva_registered() -> None:
 
 class GeoLLaVA(BaseAgent):
     def __init__(
-        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+        self,
+        codename: str,
+        device: str | None = None,
+        dtype: torch.dtype | None = None,
+        quantization_config: BitsAndBytesConfig | None = None,
     ) -> None:
-        super().__init__(codename, device=device, dtype=dtype)
+        super().__init__(
+            codename, device=device, dtype=dtype, quantization_config=quantization_config
+        )
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
         _ensure_longva_registered()
@@ -40,13 +49,17 @@ class GeoLLaVA(BaseAgent):
         config = AutoConfig.from_pretrained(codename)
         config.model_type = "llava_qwen"
 
-        self.model = LlavaQwenForCausalLM.from_pretrained(
-            codename,
-            config=config,
-            dtype=self.dtype,
-            device_map=self.device,
-            low_cpu_mem_usage=True,
-        )
+        load_kwargs: dict[str, Any] = {
+            "config": config,
+            "low_cpu_mem_usage": True,
+        }
+        if quantization_config is not None:
+            load_kwargs["quantization_config"] = quantization_config
+            load_kwargs["device_map"] = "auto"
+        else:
+            load_kwargs["dtype"] = self.dtype
+            load_kwargs["device_map"] = self.device
+        self.model = LlavaQwenForCausalLM.from_pretrained(codename, **load_kwargs)
         self.model.eval()
 
     def _tokenize_with_image_token(self, text: str) -> torch.Tensor:

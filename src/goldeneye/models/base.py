@@ -2,20 +2,29 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import torch
 from PIL import Image
 
 from goldeneye.report import Report
 
+if TYPE_CHECKING:
+    from transformers import BitsAndBytesConfig
+
 
 class BaseAgent(ABC):
     def __init__(
-        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+        self,
+        codename: str,
+        device: str | None = None,
+        dtype: torch.dtype | None = None,
+        quantization_config: BitsAndBytesConfig | None = None,
     ) -> None:
         self.codename = codename
         self.device = device
         self.dtype = dtype
+        self.quantization_config = quantization_config
 
     @abstractmethod
     @torch.inference_mode()

@@ -1,5 +1,8 @@
+from __future__ import annotations
+
 import re
 from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import torch
 from PIL import Image
@@ -11,6 +14,9 @@ from transformers import (
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
+
+if TYPE_CHECKING:
+    from transformers import BitsAndBytesConfig
 
 
 def chat_batch(
@@ -24,7 +30,7 @@ def chat_batch(
         text=prompts,
         images=imgs,
         return_tensors="pt",
-        padding="longest",  # type: ignore[arg-type]
+        padding="longest",
     ).to(model.device)
     gen_ids = model.generate(**inputs, max_new_tokens=max_new_tokens, do_sample=False, num_beams=1)
     outputs = []
@@ -132,26 +138,36 @@ Rules:
 <|im_end|><|im_start|>assistant
 """  # noqa: E501
 
+DEFAULT_PROCESSOR = "Qwen/Qwen2.5-VL-3B-Instruct"
+
 
 class ZoomEarth(BaseAgent):
     processor: Qwen2_5_VLProcessor
     model: Qwen2_5_VLForConditionalGeneration
 
     def __init__(
-        self, codename: str, device: str | None = None, dtype: torch.dtype | None = None
+        self,
+        codename: str,
+        device: str | None = None,
+        dtype: torch.dtype | None = None,
+        quantization_config: BitsAndBytesConfig | None = None,
     ) -> None:
-        super().__init__(codename, device=device, dtype=dtype)
+        super().__init__(
+            codename, device=device, dtype=dtype, quantization_config=quantization_config
+        )
         self.device = get_device(device)
         self.dtype = get_dtype(self.device, dtype)
         self.processor = Qwen2_5_VLProcessor.from_pretrained(
-            codename, trust_remote_code=True, use_fast=False
+            DEFAULT_PROCESSOR, trust_remote_code=True
         )
-        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
-            codename,
-            dtype=self.dtype,
-            device_map=self.device,
-            trust_remote_code=True,
-        )
+        load_kwargs: dict[str, Any] = {"trust_remote_code": True}
+        if quantization_config is not None:
+            load_kwargs["quantization_config"] = quantization_config
+            load_kwargs["device_map"] = "auto"
+        else:
+            load_kwargs["dtype"] = self.dtype
+            load_kwargs["device_map"] = self.device
+        self.model = Qwen2_5_VLForConditionalGeneration.from_pretrained(codename, **load_kwargs)
         self.model.eval()
 
     def recon(

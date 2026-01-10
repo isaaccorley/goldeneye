@@ -982,7 +982,11 @@ class InternLM2Model(InternLM2PreTrainedModel):
         seq_length_with_past = seq_length
         past_key_values_length = 0
         if past_key_values is not None:
-            past_key_values_length = past_key_values[0][0].shape[2]
+            if hasattr(past_key_values, "get_seq_length"):
+                past_key_values_length = past_key_values.get_seq_length()
+            elif isinstance(past_key_values, (list, tuple)) and len(past_key_values) > 0:
+                if past_key_values[0] is not None and past_key_values[0][0] is not None:
+                    past_key_values_length = past_key_values[0][0].shape[2]
             seq_length_with_past = seq_length_with_past + past_key_values_length
 
         if position_ids is None:
