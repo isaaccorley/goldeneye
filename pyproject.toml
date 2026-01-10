@@ -7,15 +7,23 @@ name = "goldeneye"
 version = "0.1.0"
 description = "Simple unified interface for geospatial vision-language models."
 readme = "README.md"
+keywords = [ "deep-learning", "geospatial", "machine-learning", "remote-sensing", "vision-language-models", "vlm" ]
+license = "MIT"
 authors = [ { name = "Isaac Corley", email = "isaac.corley@proton.me" } ]
 requires-python = ">=3.13"
 classifiers = [
+  "Development Status :: 4 - Beta",
+  "Intended Audience :: Developers",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Topic :: Scientific/Engineering :: Artificial Intelligence",
+  "Topic :: Scientific/Engineering :: GIS",
+  "Topic :: Scientific/Engineering :: Image Processing",
 ]
-
 dependencies = [
   "accelerate>=1",
   "bitsandbytes>=0.49.1",
@@ -36,6 +44,10 @@ dependencies = [
   "transformers>=4.40",
 ]
 
+urls.Homepage = "https://github.com/isaaccorley/goldeneye"
+urls.Issues = "https://github.com/isaaccorley/goldeneye/issues"
+urls.Repository = "https://github.com/isaaccorley/goldeneye"
+
 [dependency-groups]
 dev = [
   "ipykernel>=7.0.1",
@@ -51,6 +63,7 @@ dev = [
 [tool.ruff]
 target-version = "py313"
 line-length = 100
+exclude = [ "scripts" ]
 
 force-exclude = true
 lint.select = [

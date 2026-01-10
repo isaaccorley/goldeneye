@@ -182,14 +182,16 @@ def load_and_run_with_fallback(
         (response, precision, error) - response is the model output,
         precision is the quantization level used, error is None on success.
     """
+    import gc
+
     # ZoomEarth requires 8-bit quantization to avoid OOM
     if "ZoomEarth" in model_name:
         precision_order: list[tuple[str, int | None]] = [("8bit", 8)]
     else:
         precision_order = [("bf16", None)]
 
+    model: Any = None
     for precision_name, quant_bits in precision_order:
-        model = None
         try:
             # Load model
             if quant_bits is not None:
@@ -212,29 +214,24 @@ def load_and_run_with_fallback(
             else:
                 response = str(result)
 
-            # Clean up
-            del model
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
             return response, precision_name, None
 
         except RuntimeError as e:
-            if model is not None:
-                del model
-            if torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
             if "out of memory" in str(e).lower() or "CUDA" in str(e):
                 print(f"  OOM at {precision_name}, trying lower precision...", flush=True)
                 continue
             return None, precision_name, f"runtime_error: {e}"
         except Exception as e:
+            return None, precision_name, f"error: {e}"
+        finally:
+            # Clean up model thoroughly
             if model is not None:
                 del model
+                model = None
+            gc.collect()
             if torch.cuda.is_available():
                 torch.cuda.empty_cache()
-            return None, precision_name, f"error: {e}"
+                torch.cuda.synchronize()
 
     return None, "4bit", "all_precisions_failed_oom"
 
@@ -355,7 +352,15 @@ def main() -> int:
 
     print(f"\nTesting {len(model_names)} models...\n", flush=True)
 
+    import gc
+
     for model_name in model_names:
+        # Ensure GPU memory is clean before loading each model
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
+
         result = test_model(model_name, sample_image, prompt, device, args.max_new_tokens)
         report.results.append(asdict(result))
 
@@ -372,6 +377,12 @@ def main() -> int:
         print(f"  {model_name}: {status_str}", flush=True)
 
         save_report(report, args.output)
+
+        # Clean up after each model test
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+            torch.cuda.synchronize()
 
     print(f"\n{'=' * 60}", flush=True)
     print("SUMMARY", flush=True)
