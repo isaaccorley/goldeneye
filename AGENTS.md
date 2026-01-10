@@ -190,4 +190,4 @@ GitHub Actions: `.github/workflows/ci.yaml`
 - supervision - detection visualization
 - datasets - HF dataset streaming
 - qwen-vl-utils - Qwen VL preprocessing
-- sam2/sam3 - segmentation models
+- sam2 - segmentation models

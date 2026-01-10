@@ -29,15 +29,22 @@ print(response)
 
 ## Supported Models
 
-- **GeoZero** (`hjvsl/GeoZero`)
-- **GeoLLaVA-8K** (`initiacms/GeoLLaVA-8K`) - Based on LongVA-7B
-- **Geo-R1-3B** - Qwen2.5-VL-3B based geospatial reasoning models (8 variants: REC/GRES/OVD with 1/5/10-shot)
-- **EarthDial-4B** - InternVL2-based models (RGB, MS, Methane-UHI variants)
-- **geochat-7B** (`MBZUAI/geochat-7B`) - Grounded Large Vision Language Model for Remote Sensing
-- **GeoPixel-7B** (`MBZUAI/GeoPixel-7B`) - Pixel grounding model for RS-GCG task
-- **GeoPixel-7B-RES** (`MBZUAI/GeoPixel-7B-RES`) - Pixel grounding model for RRSIS task
-- **ZoomEarth-3B** (`HappyBug/ZoomEarth-3B`) - Qwen2.5-VL based zoom-in reasoning model
-- **DescribeEarth** (`earth-insights/DescribeEarth`) - Remote sensing image captioning model
+| Model Family           | Size | Architecture  | HuggingFace ID                 | Notes                           |
+| ---------------------- | ---- | ------------- | ------------------------------ | ------------------------------- |
+| GeoR1 (8 variants)     | 3B   | Qwen2.5-VL-3B | `Geo-R1/Geo-R1-3B-GRPO-*`      | REC/GRES/OVD tasks, 1/5/10-shot |
+| ZoomEarth              | 3B   | Qwen2.5-VL-3B | `HappyBug/ZoomEarth-3B`        | Zoom-in reasoning               |
+| DescribeEarth          | 3B   | Qwen2.5-VL-3B | `earth-insights/DescribeEarth` | RS image captioning             |
+| EarthDial (3 variants) | 4B   | InternVL2     | `akshaydudhane/EarthDial_4B_*` | RGB/MS/Methane-UHI              |
+| GeoChat                | 7B   | LLaMA         | `MBZUAI/geochat-7B`            | Grounded RS VLM                 |
+| GeoLLaVA               | 7B   | LongVA-7B     | `initiacms/GeoLLaVA-8K`        | Long-context RS VLM             |
+| GeoZero                | 8B   | Qwen3-VL      | `hjvsl/GeoZero`                | Largest text model              |
+
+### Memory Requirements
+
+- **3B models** (GeoR1, ZoomEarth, DescribeEarth): ~6GB VRAM at fp16
+- **4B models** (EarthDial): ~8GB VRAM at fp16
+- **7B models** (GeoChat, GeoLLaVA): ~14GB VRAM at fp16, 8-bit recommended for 16GB GPUs
+- **8B models** (GeoZero): ~16GB VRAM at fp16
 
 ## Usage
 
@@ -80,29 +87,6 @@ model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot")
 model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cuda")  # NVIDIA GPU
 model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="mps")  # Apple Silicon
 model = goldeneye.dispatch_agent("Geo-R1-3B-GRPO-REC-5shot", device="cpu")  # CPU
-```
-
-### Pixel Grounding with GeoPixel
-
-GeoPixel models support pixel-level segmentation:
-
-```python
-import goldeneye
-import numpy as np
-from PIL import Image
-
-model = goldeneye.dispatch_agent("GeoPixel-7B")
-image = Image.open("satellite_image.jpg")
-
-# Get text response with segmentation masks
-response, masks = model.generate_with_masks(
-    image, "Segment all buildings in this image.", max_new_tokens=128
-)
-
-# Masks are numpy arrays (H, W) with values 0 or 1
-for i, mask in enumerate(masks):
-    mask_img = Image.fromarray((mask * 255).astype(np.uint8))
-    mask_img.save(f"mask_{i}.png")
 ```
 
 ### Benchmark Datasets
@@ -151,4 +135,3 @@ uv run pre-commit install
 
 - **Geo-R1**: [Paper](https://arxiv.org/abs/2510.00072) - Unlocking VLM Geospatial Reasoning with Cross-View Reinforcement Learning
 - **geochat-7B**: [Paper](https://arxiv.org/abs/2311.15826) - Grounded Large Vision-Language Model for Remote Sensing
-- **GeoPixel-7B**: [Paper](https://arxiv.org/abs/2501.13925) - Pixel Grounding Large Multimodal Models in Remote Sensing

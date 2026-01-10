@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 import torchvision.transforms as T
@@ -10,15 +10,18 @@ from huggingface_hub import hf_hub_download
 from PIL import Image
 from safetensors.torch import load_file
 from torchvision.transforms.functional import InterpolationMode
-from transformers import AutoModel, AutoTokenizer, GenerationConfig, GenerationMixin
+from transformers import (
+    AutoModel,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    GenerationConfig,
+    GenerationMixin,
+)
 from transformers.cache_utils import DynamicCache
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 
 def _patch_phi3_model_class() -> None:

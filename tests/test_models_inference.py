@@ -13,7 +13,6 @@ HEAVY_MODELS = [
     "EarthDial-4B-RGB",
     "geochat-7B",
     "GeoLLaVA-8K",
-    "GeoPixel-7B",
 ]
 
 DEVICE = "cuda" if torch.cuda.is_available() else "cpu"

@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 from PIL import Image
 from qwen_vl_utils import process_vision_info
-from transformers import AutoProcessor, Qwen2_5_VLForConditionalGeneration
+from transformers import AutoProcessor, BitsAndBytesConfig, Qwen2_5_VLForConditionalGeneration
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 DEFAULT_PROCESSOR = "Qwen/Qwen2.5-VL-3B-Instruct"
 

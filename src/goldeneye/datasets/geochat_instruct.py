@@ -5,12 +5,9 @@ import logging
 import subprocess
 from collections.abc import Iterator
 from pathlib import Path
-from typing import TYPE_CHECKING
 
 from huggingface_hub import hf_hub_download, snapshot_download
-
-if TYPE_CHECKING:
-    from PIL import Image
+from PIL import Image
 
 logger = logging.getLogger(__name__)
 

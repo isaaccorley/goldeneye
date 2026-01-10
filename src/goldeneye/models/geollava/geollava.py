@@ -1,11 +1,11 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import torch
 from PIL import Image
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer, BitsAndBytesConfig
 
 import goldeneye.models.geollava._longva_inference  # noqa: F401
 from goldeneye.models.base import BaseAgent
@@ -16,9 +16,6 @@ from goldeneye.models.geollava._longva_inference import (
 )
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 _GEOLLAVA_DIR: Final[Path] = Path(__file__).parent
 

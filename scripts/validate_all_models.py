@@ -182,11 +182,11 @@ def load_and_run_with_fallback(
         (response, precision, error) - response is the model output,
         precision is the quantization level used, error is None on success.
     """
-    precision_order: list[tuple[str, int | None]] = [
-        ("bf16", None),
-        ("8bit", 8),
-        ("4bit", 4),
-    ]
+    # ZoomEarth requires 8-bit quantization to avoid OOM
+    if "ZoomEarth" in model_name:
+        precision_order: list[tuple[str, int | None]] = [("8bit", 8)]
+    else:
+        precision_order = [("bf16", None)]
 
     for precision_name, quant_bits in precision_order:
         model = None

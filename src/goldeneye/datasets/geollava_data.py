@@ -12,10 +12,8 @@ Paper: https://arxiv.org/abs/2505.21375
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, TypedDict
-
-if TYPE_CHECKING:
-    from collections.abc import Iterator
+from collections.abc import Iterator
+from typing import TypedDict
 
 from datasets import (
     Dataset,

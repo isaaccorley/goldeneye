@@ -1,12 +1,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 from huggingface_hub import hf_hub_download
 from PIL import Image
-from transformers import AutoConfig, AutoTokenizer
+from transformers import AutoConfig, AutoTokenizer, BitsAndBytesConfig
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.geochat.modeling_geochat import (
@@ -19,9 +19,6 @@ from goldeneye.models.geochat.modeling_geochat import (
 )
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 
 class GeoChat(BaseAgent):

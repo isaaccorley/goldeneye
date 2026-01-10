@@ -1,19 +1,16 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import torch
 from PIL import Image
-from transformers import AutoProcessor
+from transformers import AutoProcessor, BitsAndBytesConfig
 from transformers.models.qwen3_vl import Qwen3VLForConditionalGeneration
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 
 class GeoZero(BaseAgent):

@@ -1,13 +1,9 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
-
 import torch
+from transformers import BitsAndBytesConfig
 
 from goldeneye.models.base import BaseAgent
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 _AGENT_REGISTRY: dict[str, str] = {
     "GeoZero": "hjvsl/GeoZero",
@@ -24,8 +20,6 @@ _AGENT_REGISTRY: dict[str, str] = {
     "EarthDial-4B-MS": "akshaydudhane/EarthDial_4B_MS",
     "EarthDial-4B-Methane-UHI": "akshaydudhane/EarthDial_4B_Methane_UHI",
     "geochat-7B": "MBZUAI/geochat-7B",
-    "GeoPixel-7B-RES": "MBZUAI/GeoPixel-7B-RES",
-    "GeoPixel-7B": "MBZUAI/GeoPixel-7B",
     "ZoomEarth-3B": "HappyBug/ZoomEarth-3B",
     "DescribeEarth": "earth-insights/DescribeEarth",
 }
@@ -45,8 +39,6 @@ _AGENT_CLASS_PATHS: dict[str, tuple[str, str]] = {
     "EarthDial-4B-MS": ("goldeneye.models.earthdial", "EarthDial"),
     "EarthDial-4B-Methane-UHI": ("goldeneye.models.earthdial", "EarthDial"),
     "geochat-7B": ("goldeneye.models.geochat", "GeoChat"),
-    "GeoPixel-7B-RES": ("goldeneye.models.geopixel", "GeoPixel"),
-    "GeoPixel-7B": ("goldeneye.models.geopixel", "GeoPixel"),
     "ZoomEarth-3B": ("goldeneye.models.zoomearth", "ZoomEarth"),
     "DescribeEarth": ("goldeneye.models.describe_earth", "DescribeEarth"),
 }

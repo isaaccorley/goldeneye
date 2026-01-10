@@ -11,7 +11,6 @@ import math
 import os
 import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING
 
 import torch
 import torch.distributed as dist
@@ -30,9 +29,6 @@ from transformers import (
 )
 from transformers.generation.utils import GenerateOutput
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
-if TYPE_CHECKING:
-    pass
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = -200

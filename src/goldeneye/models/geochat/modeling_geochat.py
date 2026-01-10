@@ -6,7 +6,7 @@ from __future__ import annotations
 import math
 import re
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Any, Final
+from typing import Any, Final
 
 import torch
 import torch.nn as nn
@@ -20,11 +20,9 @@ from transformers import (
     LlamaConfig,
     LlamaForCausalLM,
     LlamaModel,
+    PreTrainedTokenizer,
 )
 from transformers.modeling_outputs import CausalLMOutputWithPast
-
-if TYPE_CHECKING:
-    from transformers import PreTrainedTokenizer
 
 IGNORE_INDEX = -100
 IMAGE_TOKEN_INDEX = -200

@@ -6,20 +6,21 @@ import math
 import warnings
 from io import BytesIO
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any, cast
 
 import numpy as np
 import requests
 import torch
 from PIL import Image
-from transformers import Qwen2_5_VLForConditionalGeneration, Qwen2_5_VLProcessor
+from transformers import (
+    BitsAndBytesConfig,
+    Qwen2_5_VLForConditionalGeneration,
+    Qwen2_5_VLProcessor,
+)
 
 from goldeneye.models.base import BaseAgent
 from goldeneye.models.utils import get_device, get_dtype
 from goldeneye.report import Report
-
-if TYPE_CHECKING:
-    from transformers import BitsAndBytesConfig
 
 IMAGE_FACTOR = 28
 MIN_PIXELS = 4 * 28 * 28

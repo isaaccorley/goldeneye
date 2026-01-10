@@ -18,14 +18,16 @@ classifiers = [
 
 dependencies = [
   "accelerate>=1",
+  "bitsandbytes>=0.49.1",
   "datasets>=2.14",
+  "decord>=0.6",
   "einops>=0.8",
   "hf-transfer>=0.1",
   "pillow>=10",
   "protobuf>=6.33.2",
+  "pycocotools>=2.0.11",
   "qwen-vl-utils>=0.0.8",
   "sam2>=1.1",
-  "sam3 @ git+https://github.com/facebookresearch/sam3.git@7b89b8fc3fa0ae8d09d9b17a284b5299e238b1b0",
   "sentencepiece>=0.2",
   "supervision>=0.22",
   "timm>=0.9.16",
@@ -49,9 +51,6 @@ dev = [
 [tool.ruff]
 target-version = "py313"
 line-length = 100
-exclude = [
-  "src/goldeneye/models/geopixel/IXC", # vendor code
-]
 
 force-exclude = true
 lint.select = [
@@ -125,4 +124,4 @@ checks = [
 
 [tool.ty.src]
 include = [ "src", "tests" ]
-exclude = [ "notebooks", "src/goldeneye/models/geopixel" ]
+exclude = [ "notebooks" ]

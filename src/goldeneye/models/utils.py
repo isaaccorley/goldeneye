@@ -30,4 +30,7 @@ def create_quantization_config(bits: Literal[4, 8]) -> BitsAndBytesConfig:
             bnb_4bit_compute_dtype=torch.bfloat16,
             bnb_4bit_use_double_quant=True,
         )
-    return BitsAndBytesConfig(load_in_8bit=True)
+    return BitsAndBytesConfig(
+        load_in_8bit=True,
+        llm_int8_enable_fp32_cpu_offload=True,
+    )

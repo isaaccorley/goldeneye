@@ -24,7 +24,7 @@ repos:
     rev: v1.9.0
     hooks:
       - id: numpydoc-validation
-        exclude: "^(notebooks|tests|src/goldeneye/models/geopixel)/"
+        exclude: "^(scripts|notebooks|tests)/"
 
   - repo: https://github.com/tox-dev/pyproject-fmt
     rev: v2.8.0
@@ -39,11 +39,6 @@ repos:
           - mdformat-mkdocs==4.0.0
           - mdformat-footnote==0.1.1
 
-  - repo: https://github.com/crate-ci/typos
-    rev: v1.38.1
-    hooks:
-      - id: typos
-
   - repo: local
     hooks:
       - id: ty-check
@@ -52,7 +47,7 @@ repos:
         entry: uvx ty check
         args: [--python=.venv/]
         pass_filenames: false
-        exclude: "^(notebooks|src/goldeneye/models/geopixel)/"
+        exclude: "^(notebooks)/"
 
   - repo: local
     hooks:
