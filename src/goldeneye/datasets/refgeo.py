@@ -1,12 +1,11 @@
-"""refGeo - Referring Expression Comprehension for Remote Sensing.
+"""RefGeo - Referring Expression Comprehension for Remote Sensing.
 
 https://huggingface.co/datasets/erenzhou/refGeo
 
-refGeo contains remote sensing images with referring expressions
+RefGeo contains remote sensing images with referring expressions
 and bounding box/polygon annotations for grounding tasks.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,12 +13,12 @@ from datasets import load_dataset
 
 def load_refgeo(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
-    """Load the refGeo dataset.
+    """Load the RefGeo dataset.
 
-    refGeo contains remote sensing images with referring expressions
+    RefGeo contains remote sensing images with referring expressions
     and bounding box/polygon annotations for grounding tasks.
 
     Parameters
@@ -50,20 +49,3 @@ def load_refgeo(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_refgeo(split: str = "train") -> Iterator[dict]:
-    """Stream the refGeo dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with question_id, image_id, bbox, poly, question
-    """
-    ds = load_refgeo(split=split, streaming=True)
-    yield from ds

@@ -6,7 +6,6 @@ PreGRES contains image-conversation pairs for pre-training referring
 expression segmentation models.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_pregres(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the PreGRES dataset.
@@ -49,20 +48,3 @@ def load_pregres(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_pregres(split: str = "train") -> Iterator[dict]:
-    """Stream the PreGRES dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with id, image, conversations
-    """
-    ds = load_pregres(split=split, streaming=True)
-    yield from ds

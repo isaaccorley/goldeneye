@@ -8,42 +8,42 @@ A curated list of geospatial/remote sensing vision-language models available on 
 - 🔧 **TODO** - Not yet integrated, needs implementation
 - ⚠️ **Partial** - Partially working or needs fixes
 
----
+______________________________________________________________________
 
 ## Integrated Models (in goldeneye)
 
-| Model | HuggingFace ID | Size | Status | Notes |
-|-------|----------------|------|--------|-------|
-| GeoR1 | `Carkham/GeoR1-7B` | 7B | ✅ Integrated | Qwen2.5-VL based, geospatial reasoning |
-| GeoZero | Various | 7B | ✅ Integrated | Zero-shot geospatial VLM |
-| GeoChat | `MBZUAI/geochat-7B` | 7B | ✅ Integrated | MBZUAI's geospatial chat model |
-| GeoLLaVA | Various | 7B | ✅ Integrated | LLaVA-based geospatial model |
-| EarthDial | Various | 7B | ✅ Integrated | Earth observation VLM |
-| DescribeEarth | Various | 7B | ✅ Integrated | Image description model |
-| ZoomEarth | Various | 7B | ✅ Integrated | Multi-resolution RS model |
+| Model         | HuggingFace ID      | Size | Status        | Notes                                  |
+| ------------- | ------------------- | ---- | ------------- | -------------------------------------- |
+| GeoR1         | `Carkham/GeoR1-7B`  | 7B   | ✅ Integrated | Qwen2.5-VL based, geospatial reasoning |
+| GeoZero       | Various             | 7B   | ✅ Integrated | Zero-shot geospatial VLM               |
+| GeoChat       | `MBZUAI/geochat-7B` | 7B   | ✅ Integrated | MBZUAI's geospatial chat model         |
+| GeoLLaVA      | Various             | 7B   | ✅ Integrated | LLaVA-based geospatial model           |
+| EarthDial     | Various             | 7B   | ✅ Integrated | Earth observation VLM                  |
+| DescribeEarth | Various             | 7B   | ✅ Integrated | Image description model                |
+| ZoomEarth     | Various             | 7B   | ✅ Integrated | Multi-resolution RS model              |
 
----
+______________________________________________________________________
 
 ## Models to Integrate
 
-| Model | HuggingFace ID | Size | Status | Notes |
-|-------|----------------|------|--------|-------|
-| VHM | `FitzPC/vhm_7B` | 7B | 🔧 TODO | Versatile RS VLM. Trained on VHM_VersaD (4.1M). |
-| TEOChat | `jirvin16/TEOChat` | 7B | 🔧 TODO | Temporal Earth Observation chat. |
-| SegEarth-R1 | `earth-insights/SegEarth-R1` | 7B | 🔧 TODO | Geospatial pixel reasoning. |
-| CCExpert | Various | 7B | 🔧 TODO | Change captioning expert. |
-| GeoPix | `Norman-ou/GeoPix-ft-sior_rsicap` | - | 🔧 TODO | Pixel-level RS MLLM. Referring segmentation. |
-| UniGeoSeg | `nishuo1999/UniGeoSeg` | 2B | 🔧 TODO | Unified geo segmentation. LLaVA-Phi based. |
-| SkySenseGPT | `ll-13/SkySenseGPT-7B-CLIP-ViT` | 7B | 🔧 TODO | RS VLM with fine-grained understanding. |
-| GeoChat-UAV | `ZhanYang-nwpu/GeoChat-UAV` | 7B | 🔧 TODO | UAV-specific GeoChat. UAVMLLM collection. |
-| RSCoVLM | `Qingyun/RSCoVLM-7B-2512` | 7B | 🔧 TODO | Multi-task RS VLM (Qwen2.5-VL based). Detection + understanding. |
-| RSCoVLM-det | `Qingyun/RSCoVLM-det-7B-2512` | 7B | 🔧 TODO | Detection-only version of RSCoVLM. |
-| LMMRotate | `Qingyun/Florence-2-large-DOTA-v1.0-lmmrotate` | 0.9B | 🔧 TODO | Florence-2 for oriented object detection. |
-| EarthMind | `sy1998/EarthMind-4B` | 4B | 🔧 TODO | RS reasoning with segmentation. SA2VA architecture. |
-| EarthMind-Multi | `sy1998/EarthMind4B_multi` | 4B | 🔧 TODO | Multi-task EarthMind variant. |
-| MF-RSVLM | `FelixKAI/mfrsvlm-7b_sft` | 7B | 🔧 TODO | Feature fusion RS VLM. CLIP + Vicuna-7B. |
+| Model           | HuggingFace ID                                 | Size | Status  | Notes                                                            |
+| --------------- | ---------------------------------------------- | ---- | ------- | ---------------------------------------------------------------- |
+| VHM             | `FitzPC/vhm_7B`                                | 7B   | 🔧 TODO | Versatile RS VLM. Trained on VHM_VersaD (4.1M).                  |
+| TEOChat         | `jirvin16/TEOChat`                             | 7B   | 🔧 TODO | Temporal Earth Observation chat.                                 |
+| SegEarth-R1     | `earth-insights/SegEarth-R1`                   | 7B   | 🔧 TODO | Geospatial pixel reasoning.                                      |
+| CCExpert        | Various                                        | 7B   | 🔧 TODO | Change captioning expert.                                        |
+| GeoPix          | `Norman-ou/GeoPix-ft-sior_rsicap`              | -    | 🔧 TODO | Pixel-level RS MLLM. Referring segmentation.                     |
+| UniGeoSeg       | `nishuo1999/UniGeoSeg`                         | 2B   | 🔧 TODO | Unified geo segmentation. LLaVA-Phi based.                       |
+| SkySenseGPT     | `ll-13/SkySenseGPT-7B-CLIP-ViT`                | 7B   | 🔧 TODO | RS VLM with fine-grained understanding.                          |
+| GeoChat-UAV     | `ZhanYang-nwpu/GeoChat-UAV`                    | 7B   | 🔧 TODO | UAV-specific GeoChat. UAVMLLM collection.                        |
+| RSCoVLM         | `Qingyun/RSCoVLM-7B-2512`                      | 7B   | 🔧 TODO | Multi-task RS VLM (Qwen2.5-VL based). Detection + understanding. |
+| RSCoVLM-det     | `Qingyun/RSCoVLM-det-7B-2512`                  | 7B   | 🔧 TODO | Detection-only version of RSCoVLM.                               |
+| LMMRotate       | `Qingyun/Florence-2-large-DOTA-v1.0-lmmrotate` | 0.9B | 🔧 TODO | Florence-2 for oriented object detection.                        |
+| EarthMind       | `sy1998/EarthMind-4B`                          | 4B   | 🔧 TODO | RS reasoning with segmentation. SA2VA architecture.              |
+| EarthMind-Multi | `sy1998/EarthMind4B_multi`                     | 4B   | 🔧 TODO | Multi-task EarthMind variant.                                    |
+| MF-RSVLM        | `FelixKAI/mfrsvlm-7b_sft`                      | 7B   | 🔧 TODO | Feature fusion RS VLM. CLIP + Vicuna-7B.                         |
 
----
+______________________________________________________________________
 
 ## Model Details
 
@@ -162,25 +162,24 @@ A curated list of geospatial/remote sensing vision-language models available on 
 - **GitHub**: [Junjue-Wang/DisasterM3](https://github.com/Junjue-Wang/DisasterM3)
 - **Tasks**: Disaster damage assessment, multi-task VLM (9 tasks, 10 disaster types)
 
----
+______________________________________________________________________
 
 ## Adding a New Model
 
 To add a new model to goldeneye:
 
 1. Create `src/goldeneye/models/<name>/` directory
-2. Implement agent class inheriting from `BaseAgent`
-3. Implement `recon()` method for inference
-4. Register in `registry.py`
-5. Add unit tests in `tests/test_models.py`
+1. Implement agent class inheriting from `BaseAgent`
+1. Implement `recon()` method for inference
+1. Register in `registry.py`
+1. Add unit tests in `tests/test_models.py`
 
 See [AGENTS.md](../AGENTS.md) for detailed instructions.
 
----
+______________________________________________________________________
 
 ## Related Resources
 
 - [Datasets Documentation](datasets.md)
 - [HuggingFace Remote Sensing Models](https://huggingface.co/models?other=remote-sensing)
 - [Awesome Remote Sensing VLMs](https://github.com/topics/remote-sensing-vlm)
-

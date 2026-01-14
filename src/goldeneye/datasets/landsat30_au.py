@@ -6,7 +6,6 @@ Landsat captions dataset for remote sensing image-caption pairs
 from Landsat imagery with captions and segmentation annotations.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_landsat_captions(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the Landsat Captions dataset.
@@ -49,20 +48,3 @@ def load_landsat_captions(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_landsat_captions(split: str = "train") -> Iterator[dict]:
-    """Stream the Landsat Captions dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with input, target, captions, etc.
-    """
-    ds = load_landsat_captions(split=split, streaming=True)
-    yield from ds

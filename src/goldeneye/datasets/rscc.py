@@ -11,7 +11,6 @@ Configs:
 - "EBD": EBD (Emergency Building Damage) subset
 """
 
-from collections.abc import Iterator
 from typing import Any, Literal
 
 from datasets import load_dataset
@@ -22,7 +21,7 @@ RSCCConfig = Literal["benchmark", "EBD"]
 def load_rscc(
     config: RSCCConfig = "benchmark",
     split: str = "benchmark",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the RSCC (Remote Sensing Change Caption) dataset.
@@ -63,25 +62,3 @@ def load_rscc(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_rscc(
-    config: RSCCConfig = "benchmark",
-    split: str = "benchmark",
-) -> Iterator[dict]:
-    """Stream the RSCC dataset sample by sample.
-
-    Parameters
-    ----------
-    config : RSCCConfig, optional
-        Dataset configuration, by default "benchmark"
-    split : str, optional
-        Dataset split to stream, by default "benchmark"
-
-    Yields
-    ------
-    dict
-        A single sample with pre_image, post_image, change_caption
-    """
-    ds = load_rscc(config=config, split=split, streaming=True)
-    yield from ds

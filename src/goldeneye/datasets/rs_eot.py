@@ -7,7 +7,6 @@ reasoning annotations. Each sample includes query, response with reasoning,
 and corresponding image.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -15,7 +14,7 @@ from datasets import load_dataset
 
 def load_rs_eot(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the RS-EoT-4K dataset.
@@ -51,20 +50,3 @@ def load_rs_eot(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_rs_eot(split: str = "train") -> Iterator[dict]:
-    """Stream the RS-EoT-4K dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with query, response, image
-    """
-    ds = load_rs_eot(split=split, streaming=True)
-    yield from ds

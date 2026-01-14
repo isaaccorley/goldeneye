@@ -7,7 +7,6 @@ with multiple task configurations including scene recognition,
 object grounding, counting, and more.
 """
 
-from collections.abc import Iterator
 from typing import Any, Literal
 
 from datasets import load_dataset
@@ -33,7 +32,7 @@ UrBenchConfig = Literal[
 def load_urbench(
     config: UrBenchConfig = "scene-recognition",
     split: str = "test",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the UrBench dataset.
@@ -70,25 +69,3 @@ def load_urbench(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_urbench(
-    config: UrBenchConfig = "scene-recognition",
-    split: str = "test",
-) -> Iterator[dict]:
-    """Stream the UrBench dataset sample by sample.
-
-    Parameters
-    ----------
-    config : UrBenchConfig, optional
-        Task configuration to load, by default "scene-recognition"
-    split : str, optional
-        Dataset split to stream, by default "test"
-
-    Yields
-    ------
-    dict
-        A single sample from the dataset
-    """
-    ds = load_urbench(config=config, split=split, streaming=True)
-    yield from ds

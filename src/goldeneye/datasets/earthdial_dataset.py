@@ -10,7 +10,6 @@ Region_captioning, Image_captioning.
 Note: Each config has different splits. Use streaming to discover splits.
 """
 
-from collections.abc import Iterator
 from typing import Any, Literal
 
 from datasets import load_dataset
@@ -27,7 +26,7 @@ EarthDialConfig = Literal[
 def load_earthdial_dataset(
     config: EarthDialConfig = "Image_captioning",
     split: str | None = None,
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the EarthDial-Dataset.
@@ -71,25 +70,3 @@ def load_earthdial_dataset(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_earthdial_dataset(
-    config: EarthDialConfig = "Image_captioning",
-    split: str | None = None,
-) -> Iterator[dict]:
-    """Stream the EarthDial-Dataset sample by sample.
-
-    Parameters
-    ----------
-    config : EarthDialConfig, optional
-        Task configuration to load, by default "Image_captioning"
-    split : str | None, optional
-        Dataset split to stream, by default None
-
-    Yields
-    ------
-    dict
-        A single sample from the dataset
-    """
-    ds = load_earthdial_dataset(config=config, split=split, streaming=True)
-    yield from ds

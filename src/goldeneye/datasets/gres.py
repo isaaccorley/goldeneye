@@ -6,7 +6,6 @@ GRES contains text expressions with segmentation masks for generalized
 referring expression segmentation tasks.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_gres(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the GRES dataset.
@@ -49,20 +48,3 @@ def load_gres(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_gres(split: str = "train") -> Iterator[dict]:
-    """Stream the GRES dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with text, is_sentence, shapes
-    """
-    ds = load_gres(split=split, streaming=True)
-    yield from ds

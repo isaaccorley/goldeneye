@@ -6,7 +6,6 @@ GeoText-1652 contains 1652 geographic locations with satellite and
 street-view images for text-to-image geo-localization research.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_geotext1652(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the GeoText-1652 dataset.
@@ -48,20 +47,3 @@ def load_geotext1652(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_geotext1652(split: str = "train") -> Iterator[dict]:
-    """Stream the GeoText-1652 dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample from the dataset
-    """
-    ds = load_geotext1652(split=split, streaming=True)
-    yield from ds

@@ -6,7 +6,6 @@ ChangeChat-87k contains 87K bi-temporal image pairs with change detection
 conversations for vision-language understanding.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_changechat(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the ChangeChat-87k dataset.
@@ -49,20 +48,3 @@ def load_changechat(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_changechat(split: str = "train") -> Iterator[dict]:
-    """Stream the ChangeChat-87k dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with id, image, changeflag, conversations
-    """
-    ds = load_changechat(split=split, streaming=True)
-    yield from ds

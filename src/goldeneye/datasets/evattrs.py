@@ -6,7 +6,6 @@ EVAttrs-95K contains 95K street-view images with EV charging station
 attribute annotations for vision-language tasks.
 """
 
-from collections.abc import Iterator
 from typing import Any
 
 from datasets import load_dataset
@@ -14,7 +13,7 @@ from datasets import load_dataset
 
 def load_evattrs(
     split: str = "train",
-    streaming: bool = False,
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
     """Load the EVAttrs-95K dataset.
@@ -48,20 +47,3 @@ def load_evattrs(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_evattrs(split: str = "train") -> Iterator[dict]:
-    """Stream the EVAttrs-95K dataset sample by sample.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample with img_id, objs
-    """
-    ds = load_evattrs(split=split, streaming=True)
-    yield from ds
