@@ -43,6 +43,14 @@ dependencies = [
   "transformers>=4.40",
 ]
 
+optional-dependencies.train = [
+  "evaluate>=0.4",
+  "peft>=0.14",
+  "rouge-score>=0.1",
+  "trl>=0.16",
+  "wandb>=0.19",
+]
+
 urls.Homepage = "https://github.com/isaaccorley/goldeneye"
 urls.Issues = "https://github.com/isaaccorley/goldeneye/issues"
 urls.Repository = "https://github.com/isaaccorley/goldeneye"

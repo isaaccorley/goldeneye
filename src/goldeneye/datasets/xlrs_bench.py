@@ -1,4 +1,10 @@
-from collections.abc import Iterator
+"""XLRS-Bench-lite - Cross-Linguistic Remote Sensing Benchmark.
+
+https://huggingface.co/datasets/initiacms/XLRS-Bench-lite
+
+A benchmark for evaluating VLMs on remote sensing images with
+multilingual questions and answers.
+"""
 
 from datasets import (
     Dataset,
@@ -10,9 +16,14 @@ from datasets import (
 
 
 def load_xlrs_bench(
-    split: str = "train", streaming: bool = False, cache_dir: str | None = None
+    split: str = "train",
+    streaming: bool = False,
+    cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the XLRS-Bench-lite dataset.
+
+    A benchmark for evaluating VLMs on remote sensing images with
+    multilingual questions and answers.
 
     Parameters
     ----------
@@ -25,7 +36,7 @@ def load_xlrs_bench(
 
     Returns
     -------
-    Dataset
+    Dataset | DatasetDict | IterableDataset | IterableDatasetDict
         The loaded dataset
 
     Examples
@@ -42,33 +53,3 @@ def load_xlrs_bench(
         streaming=streaming,
         cache_dir=cache_dir,
     )
-
-
-def stream_xlrs_bench(split: str = "train") -> Iterator[dict]:
-    """Stream the XLRS-Bench-lite dataset sample by sample.
-
-    This function streams the dataset without downloading it entirely to disk.
-    Each sample is downloaded on-demand as you iterate.
-
-    Parameters
-    ----------
-    split : str, optional
-        Dataset split to stream, by default "train"
-
-    Yields
-    ------
-    dict
-        A single sample from the dataset
-
-    Examples
-    --------
-    >>> from goldeneye.datasets import stream_xlrs_bench
-    >>> # Stream samples one at a time
-    >>> for sample in stream_xlrs_bench(split="train"):
-    ...     image = sample["image"]
-    ...     question = sample["question"]
-    ...     # Process sample without loading entire dataset
-    ...     break  # Process just first sample
-    """
-    dataset = load_xlrs_bench(split=split, streaming=True)
-    yield from dataset
