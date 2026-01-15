@@ -1,5 +1,8 @@
 """Tests for dataset loaders."""
 
+import pytest
+
+import goldeneye
 import goldeneye.datasets as datasets
 
 
@@ -121,3 +124,25 @@ def test_dataset_exports_in_all() -> None:
     ]
     for export in expected_exports:
         assert export in datasets.__all__, f"{export} not in __all__"
+
+
+def test_list_datasets() -> None:
+    """Test that list_datasets returns a list of dataset codenames."""
+    ds_list = goldeneye.list_datasets()
+    assert isinstance(ds_list, list)
+    assert len(ds_list) > 0
+    assert "xlrs-bench" in ds_list
+    assert "rsicd" in ds_list
+
+
+def test_get_dataset_info() -> None:
+    """Test that get_dataset_info returns correct information."""
+    info = goldeneye.get_dataset_info("xlrs-bench")
+    assert info["codename"] == "xlrs-bench"
+    assert info["hf_id"] == "initiacms/XLRS-Bench-lite"
+
+
+def test_get_dataset_info_invalid() -> None:
+    """Test that get_dataset_info raises error for invalid codename."""
+    with pytest.raises(ValueError, match="not found"):
+        goldeneye.get_dataset_info("nonexistent-dataset")

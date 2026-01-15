@@ -22,6 +22,7 @@ from goldeneye.datasets.lrs_vqa import load_lrs_vqa
 from goldeneye.datasets.nwpu_captions import load_nwpu_captions
 from goldeneye.datasets.pregres import load_pregres
 from goldeneye.datasets.refgeo import load_refgeo
+from goldeneye.datasets.registry import get_dataset_info, list_datasets, load_dataset
 from goldeneye.datasets.rs5m import load_rs5m
 from goldeneye.datasets.rs_eot import load_rs_eot
 from goldeneye.datasets.rs_visual_instructions import load_rs_visual_instructions
@@ -43,6 +44,10 @@ from goldeneye.datasets.xhrbench import load_xhrbench
 from goldeneye.datasets.xlrs_bench import load_xlrs_bench
 
 __all__ = [
+    # Registry functions
+    "list_datasets",
+    "load_dataset",
+    "get_dataset_info",
     # Benchmarks
     "load_de_dataset",
     "load_xlrs_bench",

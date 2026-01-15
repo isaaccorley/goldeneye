@@ -12,36 +12,55 @@ ______________________________________________________________________
 
 ## Integrated Models (in goldeneye)
 
-| Model         | HuggingFace ID      | Size | Status        | Notes                                  |
-| ------------- | ------------------- | ---- | ------------- | -------------------------------------- |
-| GeoR1         | `Carkham/GeoR1-7B`  | 7B   | ✅ Integrated | Qwen2.5-VL based, geospatial reasoning |
-| GeoZero       | Various             | 7B   | ✅ Integrated | Zero-shot geospatial VLM               |
-| GeoChat       | `MBZUAI/geochat-7B` | 7B   | ✅ Integrated | MBZUAI's geospatial chat model         |
-| GeoLLaVA      | Various             | 7B   | ✅ Integrated | LLaVA-based geospatial model           |
-| EarthDial     | Various             | 7B   | ✅ Integrated | Earth observation VLM                  |
-| DescribeEarth | Various             | 7B   | ✅ Integrated | Image description model                |
-| ZoomEarth     | Various             | 7B   | ✅ Integrated | Multi-resolution RS model              |
+| Model          | HuggingFace ID                                 | Size | Status        | Notes                                    |
+| -------------- | ---------------------------------------------- | ---- | ------------- | ---------------------------------------- |
+| GeoR1          | `Geo-R1/Geo-R1-3B-GRPO-*`                      | 3B   | ✅ Integrated | Qwen2.5-VL based, geospatial reasoning   |
+| GeoZero        | `hjvsl/GeoZero`                                | 7B   | ✅ Integrated | Zero-shot geospatial VLM                 |
+| GeoChat        | `MBZUAI/geochat-7B`                            | 7B   | ✅ Integrated | MBZUAI's geospatial chat model           |
+| GeoLLaVA       | `initiacms/GeoLLaVA-8K`                        | 7B   | ✅ Integrated | LLaVA-based geospatial model             |
+| EarthDial      | `akshaydudhane/EarthDial_4B_RGB`               | 4B   | ✅ Integrated | Earth observation VLM                    |
+| DescribeEarth  | `earth-insights/DescribeEarth`                 | 7B   | ✅ Integrated | Image description model                  |
+| ZoomEarth      | `HappyBug/ZoomEarth-3B`                        | 3B   | ✅ Integrated | Multi-resolution RS model                |
+| RSCoVLM-7B     | `Qingyun/RSCoVLM-7B-2512`                      | 7B   | ✅ Integrated | Qwen2.5-VL based, multi-task RS VLM      |
+| RSCoVLM-det-7B | `Qingyun/RSCoVLM-det-7B-2512`                  | 7B   | ✅ Integrated | Detection-focused RSCoVLM variant        |
+| Florence2-DOTA | `Qingyun/Florence-2-large-DOTA-v1.0-lmmrotate` | 0.9B | ✅ Integrated | Florence-2 for oriented object detection |
+| GeoChat-UAV    | `ZhanYang-nwpu/GeoChat-UAV`                    | 7B   | ✅ Integrated | UAV-specific GeoChat variant             |
+| SkySenseGPT    | `ll-13/SkySenseGPT-7B-CLIP-ViT`                | 7B   | ✅ Integrated | Fine-grained RS understanding            |
 
 ______________________________________________________________________
 
 ## Models to Integrate
 
-| Model           | HuggingFace ID                                 | Size | Status  | Notes                                                            |
-| --------------- | ---------------------------------------------- | ---- | ------- | ---------------------------------------------------------------- |
-| VHM             | `FitzPC/vhm_7B`                                | 7B   | 🔧 TODO | Versatile RS VLM. Trained on VHM_VersaD (4.1M).                  |
-| TEOChat         | `jirvin16/TEOChat`                             | 7B   | 🔧 TODO | Temporal Earth Observation chat.                                 |
-| SegEarth-R1     | `earth-insights/SegEarth-R1`                   | 7B   | 🔧 TODO | Geospatial pixel reasoning.                                      |
-| CCExpert        | Various                                        | 7B   | 🔧 TODO | Change captioning expert.                                        |
-| GeoPix          | `Norman-ou/GeoPix-ft-sior_rsicap`              | -    | 🔧 TODO | Pixel-level RS MLLM. Referring segmentation.                     |
-| UniGeoSeg       | `nishuo1999/UniGeoSeg`                         | 2B   | 🔧 TODO | Unified geo segmentation. LLaVA-Phi based.                       |
-| SkySenseGPT     | `ll-13/SkySenseGPT-7B-CLIP-ViT`                | 7B   | 🔧 TODO | RS VLM with fine-grained understanding.                          |
-| GeoChat-UAV     | `ZhanYang-nwpu/GeoChat-UAV`                    | 7B   | 🔧 TODO | UAV-specific GeoChat. UAVMLLM collection.                        |
-| RSCoVLM         | `Qingyun/RSCoVLM-7B-2512`                      | 7B   | 🔧 TODO | Multi-task RS VLM (Qwen2.5-VL based). Detection + understanding. |
-| RSCoVLM-det     | `Qingyun/RSCoVLM-det-7B-2512`                  | 7B   | 🔧 TODO | Detection-only version of RSCoVLM.                               |
-| LMMRotate       | `Qingyun/Florence-2-large-DOTA-v1.0-lmmrotate` | 0.9B | 🔧 TODO | Florence-2 for oriented object detection.                        |
-| EarthMind       | `sy1998/EarthMind-4B`                          | 4B   | 🔧 TODO | RS reasoning with segmentation. SA2VA architecture.              |
-| EarthMind-Multi | `sy1998/EarthMind4B_multi`                     | 4B   | 🔧 TODO | Multi-task EarthMind variant.                                    |
-| MF-RSVLM        | `FelixKAI/mfrsvlm-7b_sft`                      | 7B   | 🔧 TODO | Feature fusion RS VLM. CLIP + Vicuna-7B.                         |
+| Model       | HuggingFace ID               | Size | Status  | Notes                                           |
+| ----------- | ---------------------------- | ---- | ------- | ----------------------------------------------- |
+| VHM         | `FitzPC/vhm_7B`              | 7B   | 🔧 TODO | Versatile RS VLM. Trained on VHM_VersaD (4.1M). |
+| TEOChat     | `jirvin16/TEOChat`           | 7B   | 🔧 TODO | Temporal Earth Observation chat.                |
+| SegEarth-R1 | `earth-insights/SegEarth-R1` | 7B   | 🔧 TODO | Geospatial pixel reasoning.                     |
+| CCExpert    | Various                      | 7B   | 🔧 TODO | Change captioning expert.                       |
+
+______________________________________________________________________
+
+## Not Supported Models
+
+These models cannot be loaded with standard HuggingFace transformers and require custom code from their original repositories.
+
+| Model           | HuggingFace ID                    | Size | Reason                                              |
+| --------------- | --------------------------------- | ---- | --------------------------------------------------- |
+| GeoPix          | `Norman-ou/GeoPix-ft-sior_rsicap` | 7B   | Custom architecture with mask predictor             |
+| UniGeoSeg       | `nishuo1999/UniGeoSeg`            | 2B   | Custom `llava_phi` model type not in transformers   |
+| EarthMind       | `sy1998/EarthMind-4B`             | 4B   | SA2VA-Chat custom architecture                      |
+| EarthMind-Multi | `sy1998/EarthMind4B_multi`        | 4B   | SA2VA-Chat custom architecture                      |
+| MF-RSVLM        | `FelixKAI/mfrsvlm-7b_sft`         | 7B   | Custom `mfrsvlm` model type not in transformers     |
+| EagleVision-1B  | `liarzone/EagleVision-1B`         | 1B   | Hybrid detector+LLM, not a pure VLM                 |
+| EagleVision-2B  | `liarzone/EagleVision-2B`         | 2B   | Hybrid detector+LLM, not a pure VLM                 |
+| EagleVision-4B  | `liarzone/EagleVision-4B`         | 4B   | Hybrid detector+LLM, not a pure VLM                 |
+| EagleVision-7B  | `liarzone/EagleVision-7B`         | 7B   | Hybrid detector+LLM, not a pure VLM                 |
+| RSUniVLM        | `isaaccorley/RSUniVLM`            | 2B   | Custom `llava_qwen_gmoe` architecture               |
+| LISAt-7b        | `jquenum/LISAt-7b`                | 7B   | LISA architecture with SAM decoder for segmentation |
+| LISAt_PRE-7b    | `jquenum/LISAt_PRE-7b`            | 7B   | LISA architecture with SAM decoder for segmentation |
+| MiniGPTv2-UAV   | `ZhanYang-nwpu/MiniGPTv2-UAV`     | 7B   | MiniGPT-v2 custom architecture                      |
+| LLaVA1.5-UAV    | `ZhanYang-nwpu/LLaVA1.5-UAV`      | 7B   | Custom `llava_llama` model type not in transformers |
+| GeoGround       | `erenzhou/GeoGround`              | 7B   | Missing `model_type` in config, LLaVA-1.5 with LoRA |
 
 ______________________________________________________________________
 
