@@ -7,6 +7,8 @@ instructions covering 789K multi-scene low-altitude UAV images.
 Supports 11 image-level and region-level tasks.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,8 +19,8 @@ from datasets import (
 
 
 def load_uavit_1m(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the UAVIT-1M dataset.

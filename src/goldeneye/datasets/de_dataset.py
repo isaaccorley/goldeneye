@@ -7,6 +7,8 @@ instances, providing detailed descriptions of object attributes, relationships,
 and contexts for remote sensing images.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,7 +19,7 @@ from datasets import (
 
 
 def load_de_dataset(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:

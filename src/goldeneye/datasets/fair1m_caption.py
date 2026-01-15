@@ -6,6 +6,8 @@ FAIR1M Caption contains 22K remote sensing images with captions describing
 fine-grained objects like aircraft, ships, vehicles, etc.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_fair1m_caption(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the FAIR1M Caption dataset.

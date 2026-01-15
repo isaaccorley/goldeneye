@@ -6,6 +6,10 @@ LRS-GRO combines scene-level VQA with object grounding through
 bounding box annotations.
 """
 
+from __future__ import annotations
+
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +20,8 @@ from datasets import (
 
 
 def load_lrs_gro(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["test", "rl", "sft"] = "test",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the LRS-GRO (Large RS Grounding) dataset.
@@ -27,8 +31,8 @@ def load_lrs_gro(
 
     Parameters
     ----------
-    split : str, optional
-        Dataset split to load, by default "train"
+    split : {"test", "rl", "sft"}, optional
+        Dataset split to load, by default "test"
     streaming : bool, optional
         If True, stream the dataset, by default False
     cache_dir : str | None, optional
@@ -42,7 +46,7 @@ def load_lrs_gro(
     Examples
     --------
     >>> from goldeneye.datasets import load_lrs_gro
-    >>> dataset = load_lrs_gro(split="train")
+    >>> dataset = load_lrs_gro(split="test")
     >>> sample = dataset[0]
     >>> question = sample["question"]
     >>> bbox = sample["bbox"]

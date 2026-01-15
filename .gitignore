@@ -1,6 +1,10 @@
 data/
 .cache/
 ./*.png
+nanoVLM/
+outputs/
+wandb/
+dataset_samples/
 
 # Python
 __pycache__/

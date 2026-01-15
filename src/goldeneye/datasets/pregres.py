@@ -6,13 +6,13 @@ PreGRES contains image-conversation pairs for pre-training referring
 expression segmentation models.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_pregres(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

@@ -6,13 +6,13 @@ Landsat captions dataset for remote sensing image-caption pairs
 from Landsat imagery with captions and segmentation annotations.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_landsat_captions(
-    split: str = "train",
+    split: Literal["train", "val", "test"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

@@ -6,6 +6,8 @@ RS5M is a large-scale remote sensing image-text dataset with 7.25M samples.
 Suitable for CLIP-style pre-training or large-scale fine-tuning.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,7 +18,7 @@ from datasets import (
 
 
 def load_rs5m(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:

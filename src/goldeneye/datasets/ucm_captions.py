@@ -7,6 +7,8 @@ with human-generated captions. Originally 2,100 images (21 classes x 100 images)
 with 5 captions each, expanded to 10,500 samples.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,8 +19,8 @@ from datasets import (
 
 
 def load_ucm_captions(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the UCM-Captions dataset.

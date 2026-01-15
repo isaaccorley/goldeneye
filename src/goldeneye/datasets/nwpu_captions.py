@@ -6,6 +6,8 @@ NWPU-Captions contains images from the NWPU-RESISC45 scene classification
 dataset. 45 scene classes with ~700 images each.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,7 +18,7 @@ from datasets import (
 
 
 def load_nwpu_captions(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:

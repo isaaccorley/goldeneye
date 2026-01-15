@@ -7,7 +7,7 @@ RSTeller is a large-scale remote sensing image-text dataset containing
 """
 
 import ast
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
@@ -37,7 +37,7 @@ def _parse_json_column(example: dict) -> dict:
 
 
 def load_rsteller(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

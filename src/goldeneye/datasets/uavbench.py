@@ -7,6 +7,8 @@ low-altitude UAV vision-language tasks with 966K samples across
 43 test units and 10 tasks.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,8 +19,8 @@ from datasets import (
 
 
 def load_uavbench(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the UAVBench dataset.

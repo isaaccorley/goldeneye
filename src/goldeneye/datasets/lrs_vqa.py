@@ -6,6 +6,8 @@ LRS-VQA contains 7.3K QA pairs across 1.6K high-resolution images
 (1K to 27K pixels). Designed to evaluate LVLM perception on large RS images.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_lrs_vqa(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the LRS-VQA (Large Remote Sensing VQA) dataset.

@@ -6,13 +6,13 @@ GRES contains text expressions with segmentation masks for generalized
 referring expression segmentation tasks.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_gres(
-    split: str = "train",
+    split: Literal["train", "validation", "test"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

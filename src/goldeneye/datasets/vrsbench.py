@@ -6,6 +6,8 @@ VRSBench contains 29.6K images with comprehensive annotations including
 captions, object detections, referring expressions, and 123K QA pairs.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_vrsbench(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train", "validation"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the VRSBench (Versatile Remote Sensing Benchmark) dataset.

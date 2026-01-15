@@ -58,7 +58,7 @@ _DATASET_IDS: dict[str, str] = {
     "geochat-bench": "MBZUAI/GeoChat_Bench",
     "vrsbench": "lhrs/VRSBench",
     "xhrbench": "XHRBench/XHRBench",
-    "geozero-eval": "Peng-YM/RS-Eval-VQA-Dataset",
+    "geozero-eval": "hjvsl/GeoZero_Eval_Datasets",
     # Captioning datasets
     "rsicd": "isaaccorley/rsicd",
     "ucm-captions": "isaaccorley/ucm-captions",
@@ -74,7 +74,7 @@ _DATASET_IDS: dict[str, str] = {
     "rsvqa-hr": "jonathan-roberts1/RSVQA-HR",
     "geochat-instruct": "MBZUAI/GeoChat_Instruct",
     "lrs-vqa": "jonathan-roberts1/LRS-VQA",
-    "lrs-gro": "jonathan-roberts1/LRS-GRO",
+    "lrs-gro": "HappyBug/LRS-GRO",
     # Instruction datasets
     "rs-visual-instructions": "shizukanao/RS-visual-instructions",
     "uavit-1m": "HIT-UAV/UAVIT-1M",

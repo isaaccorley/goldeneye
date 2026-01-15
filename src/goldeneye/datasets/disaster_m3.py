@@ -7,6 +7,8 @@ DisasterM3 is a comprehensive VLM disaster assessment dataset with
 5 continents, covering 36 historical disaster events in 10 categories.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,8 +19,8 @@ from datasets import (
 
 
 def load_disaster_m3(
-    split: str = "test",
-    streaming: bool = False,
+    split: Literal["test"] = "test",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the DisasterM3 dataset.

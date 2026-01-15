@@ -15,11 +15,9 @@ from typing import Any, Literal
 
 from datasets import load_dataset
 
-RSCCConfig = Literal["benchmark", "EBD"]
-
 
 def load_rscc(
-    config: RSCCConfig = "benchmark",
+    config: Literal["benchmark", "EBD"] = "benchmark",
     split: str = "benchmark",
     streaming: bool = True,
     cache_dir: str | None = None,

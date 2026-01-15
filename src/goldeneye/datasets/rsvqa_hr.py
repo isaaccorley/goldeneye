@@ -6,6 +6,8 @@ High-resolution remote sensing VQA dataset formatted for Qwen fine-tuning.
 Contains 358K image-question-answer samples from various RS scenes.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_rsvqa_hr(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the RSVQA-HR (High Resolution) dataset.

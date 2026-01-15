@@ -6,6 +6,8 @@ Sydney Aerial Image dataset contains 613 images captured over Sydney, Australia.
 Note: The HuggingFace version contains images only (captions not included).
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_sydney_captions(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the Sydney-Captions dataset.

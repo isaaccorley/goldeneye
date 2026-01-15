@@ -6,13 +6,13 @@ GeoText-1652 contains 1652 geographic locations with satellite and
 street-view images for text-to-image geo-localization research.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_geotext1652(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

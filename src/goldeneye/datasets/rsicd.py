@@ -6,6 +6,8 @@ RSICD contains 10,921 remote sensing images with 5 captions per image.
 Images cover various land-use types and scenes.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_rsicd(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train", "test", "valid"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the RSICD (Remote Sensing Image Captioning Dataset).
@@ -27,8 +29,8 @@ def load_rsicd(
 
     Parameters
     ----------
-    split : str, optional
-        Dataset split to load. Options: "train", "valid", "test", by default "train"
+    split : Literal["train", "test", "valid"], optional
+        Dataset split to load, by default "train"
     streaming : bool, optional
         If True, stream the dataset without downloading, by default False
     cache_dir : str | None, optional

@@ -6,13 +6,13 @@ EVAttrs-95K contains 95K street-view images with EV charging station
 attribute annotations for vision-language tasks.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_evattrs(
-    split: str = "train",
+    split: Literal["train", "validation", "test"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

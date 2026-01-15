@@ -6,6 +6,8 @@ A 318K instruction tuning dataset for remote sensing, used to train the
 GeoChat model. Combines LRBEN, NWPU_captions, SOTA, SIOR, and FAST datasets.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,7 +18,7 @@ from datasets import (
 
 
 def load_geochat_instruct(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = False,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:

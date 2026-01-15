@@ -7,13 +7,13 @@ reasoning annotations. Each sample includes query, response with reasoning,
 and corresponding image.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_rs_eot(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

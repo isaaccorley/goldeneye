@@ -6,13 +6,13 @@ RefGeo contains remote sensing images with referring expressions
 and bounding box/polygon annotations for grounding tasks.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_refgeo(
-    split: str = "train",
+    split: Literal["train", "validation", "test"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

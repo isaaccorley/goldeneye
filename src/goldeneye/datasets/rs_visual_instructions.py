@@ -7,6 +7,8 @@ image captioning and synthetic VQA tasks from multiple RS captioning datasets:
 NWPU-Captions, RSICD, RSITMD, Sydney-captions, and UCM-captions.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -18,8 +20,8 @@ from datasets import (
 
 def load_rs_visual_instructions(
     config: str = "image_caption_and_synthetic_task",
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the AdaptLLM Remote Sensing Visual Instructions dataset.

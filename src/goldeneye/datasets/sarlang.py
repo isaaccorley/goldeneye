@@ -6,13 +6,13 @@ SARLANG-1M contains 1M+ SAR (Synthetic Aperture Radar) images
 for vision-language model training.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_sarlang(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:

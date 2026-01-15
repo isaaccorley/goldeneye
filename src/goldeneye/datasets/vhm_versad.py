@@ -7,6 +7,8 @@ VHM VersaD is a large-scale remote sensing image-text dataset with
 data for VHM and MF-RSVLM models.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -17,7 +19,7 @@ from datasets import (
 
 
 def load_vhm_versad(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:

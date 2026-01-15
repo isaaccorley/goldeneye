@@ -6,6 +6,8 @@ RSCID-Captions contains remote sensing images with captions,
 formatted for VQA and captioning tasks.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -16,8 +18,8 @@ from datasets import (
 
 
 def load_rscid_captions(
-    split: str = "train",
-    streaming: bool = False,
+    split: Literal["train", "test"] = "train",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the RSCID-Captions dataset.

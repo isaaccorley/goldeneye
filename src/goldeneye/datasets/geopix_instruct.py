@@ -6,6 +6,8 @@ GeoPixInstruct contains 58K pixel-level RS instructions across 6 splits
 for training models on referring segmentation and related tasks.
 """
 
+from typing import Literal
+
 from datasets import (
     Dataset,
     DatasetDict,
@@ -14,10 +16,19 @@ from datasets import (
     load_dataset,
 )
 
+GeoPixInstructSplit = Literal[
+    "train.SIOR_T",
+    "train.FAST_T",
+    "train.SOTA_T",
+    "valid.SIOR_T",
+    "valid.FAST_T",
+    "valid.SOTA_T",
+]
+
 
 def load_geopix_instruct(
-    split: str = "train.SIOR_T",
-    streaming: bool = False,
+    split: GeoPixInstructSplit = "train.SIOR_T",
+    streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Dataset | DatasetDict | IterableDataset | IterableDatasetDict:
     """Load the GeoPixInstruct dataset.

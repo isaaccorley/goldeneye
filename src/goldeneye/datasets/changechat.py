@@ -6,13 +6,13 @@ ChangeChat-87k contains 87K bi-temporal image pairs with change detection
 conversations for vision-language understanding.
 """
 
-from typing import Any
+from typing import Any, Literal
 
 from datasets import load_dataset
 
 
 def load_changechat(
-    split: str = "train",
+    split: Literal["train"] = "train",
     streaming: bool = True,
     cache_dir: str | None = None,
 ) -> Any:
